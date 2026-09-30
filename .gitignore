@@ -1,0 +1,9 @@
+node_modules/
+# Your personal career data. Never committed.
+my-data/
+*.tmp
+.DS_Store
+.setup/
+# Local-only: old working copy and editor/preview settings
+resume-bricks/
+.claude/

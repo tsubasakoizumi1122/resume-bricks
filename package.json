@@ -1,0 +1,43 @@
+{
+  "name": "resume-bricks",
+  "version": "0.1.0",
+  "description": "Stock your career history as reusable bricks and snap them together into tailored resumes. Runs locally, stores everything as YAML.",
+  "author": "Tsubasa Koizumi (https://github.com/tsubasakoizumi1122)",
+  "homepage": "https://github.com/tsubasakoizumi1122/resume-bricks#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tsubasakoizumi1122/resume-bricks.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tsubasakoizumi1122/resume-bricks/issues"
+  },
+  "type": "module",
+  "main": "server.js",
+  "bin": {
+    "resume-bricks": "server.js"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NO_OPEN=1 node --watch server.js",
+    "test": "node --test",
+    "build:demo": "node scripts/build-demo.js",
+    "build:samples": "node scripts/build-samples.js"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "keywords": [
+    "resume",
+    "cv",
+    "yaml",
+    "drag-and-drop",
+    "local-first"
+  ],
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "dependencies": {
+    "jszip": "^3.10.2",
+    "mammoth": "^1.12.3",
+    "unpdf": "^1.8.1",
+    "yaml": "^2.5.0"
+  }
+}

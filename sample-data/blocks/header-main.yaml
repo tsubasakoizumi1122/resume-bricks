@@ -1,0 +1,10 @@
+type: header
+name: Casey Morgan
+email: casey.morgan@example.com
+phone: (555) 010-3579
+location: Austin, TX
+links:
+  - label: linkedin.com/in/casey-morgan-example
+    url: https://www.linkedin.com/in/casey-morgan-example
+  - label: Portfolio
+    url: https://example.com

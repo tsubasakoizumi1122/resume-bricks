@@ -1,0 +1,187 @@
+/* App look: "Frost" (soft glass), in light and night mode.
+   Only affects the builder UI, never the printed resume.
+   <body data-mode="light|dark"> is set by app.js (Auto follows the OS setting). */
+
+/* ================= palette ================= */
+body {
+  --bg: #f2f1f8;
+  --panel: rgba(255, 255, 255, 0.62);
+  --pane-border: rgba(255, 255, 255, 0.85);
+  --line: rgba(120, 120, 170, 0.16);
+  --text: #1f1d33;
+  --muted: #74728f;
+  --primary: #6c5ce7;
+  --primary-2: #5b4bd8;
+  --primary-ink: #fff;
+  --focus: #6c5ce7;
+  --card: rgba(255, 255, 255, 0.85);
+  --card-line: rgba(255, 255, 255, 0.95);
+  --card-shadow: 0 1px 2px rgba(60, 50, 120, 0.06);
+  --card-shadow-hover: 0 4px 14px rgba(60, 50, 120, 0.12);
+  --sec: rgba(255, 255, 255, 0.45);
+  --sec-line: rgba(255, 255, 255, 0.8);
+  --btn: rgba(255, 255, 255, 0.8);
+  --btn-line: rgba(255, 255, 255, 0.95);
+  --chip: rgba(255, 255, 255, 0.6);
+  --topbar: rgba(255, 255, 255, 0.5);
+  --pane-shadow: 0 8px 32px rgba(60, 50, 120, 0.08);
+  --preview-bg: rgba(255, 255, 255, 0.35);
+  --paper-shadow: 0 1px 3px rgba(40, 30, 90, 0.08), 0 12px 40px rgba(40, 30, 90, 0.12);
+  --dialog: #f8f7fd;
+  --glow-1: #e3dcff;
+  --glow-2: #ffe1d6;
+  --glow-3: #d8f1ff;
+  --danger: #d93025;
+  --warn-bg: #fff3cd;
+  --warn-ink: #7a5a00;
+  color-scheme: light;
+}
+
+body[data-mode='dark'] {
+  --bg: #0c0b17;
+  --panel: rgba(28, 26, 48, 0.55);
+  --pane-border: rgba(255, 255, 255, 0.08);
+  --line: rgba(255, 255, 255, 0.09);
+  --text: #ecebf7;
+  --muted: #9a98b8;
+  --primary: #9d8cff;
+  --primary-2: #7b6cf0;
+  --primary-ink: #fff;
+  --focus: #b4a8ff;
+  --card: rgba(255, 255, 255, 0.055);
+  --card-line: rgba(255, 255, 255, 0.08);
+  --card-shadow: none;
+  --card-shadow-hover: 0 4px 18px rgba(0, 0, 0, 0.35);
+  --sec: rgba(255, 255, 255, 0.025);
+  --sec-line: rgba(255, 255, 255, 0.07);
+  --btn: rgba(255, 255, 255, 0.07);
+  --btn-line: rgba(255, 255, 255, 0.1);
+  --chip: rgba(255, 255, 255, 0.05);
+  --topbar: rgba(16, 14, 32, 0.6);
+  --pane-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  --preview-bg: rgba(0, 0, 0, 0.22);
+  --paper-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 24px 70px rgba(0, 0, 0, 0.6), 0 0 80px rgba(157, 140, 255, 0.1);
+  --dialog: #1a1830;
+  --glow-1: rgba(108, 92, 231, 0.35);
+  --glow-2: rgba(240, 110, 140, 0.18);
+  --glow-3: rgba(60, 170, 220, 0.2);
+  --danger: #ff7a70;
+  --warn-bg: rgba(245, 200, 90, 0.15);
+  --warn-ink: #f5d27a;
+  color-scheme: dark;
+}
+
+/* ================= base ================= */
+body {
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(1200px 600px at 0% 0%, var(--glow-1) 0%, transparent 60%),
+    radial-gradient(900px 600px at 100% 100%, var(--glow-2) 0%, transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, var(--glow-3) 0%, transparent 55%),
+    var(--bg);
+  background-attachment: fixed;
+  transition: background-color 0.3s, color 0.3s;
+}
+.muted { color: var(--muted); }
+
+/* ================= top bar ================= */
+.topbar {
+  gap: 10px 14px; padding: 12px 20px;
+  background: var(--topbar); border-bottom: 1px solid var(--pane-border);
+  backdrop-filter: blur(20px);
+}
+.brand { letter-spacing: -0.01em; }
+.logo, .logo::before, .logo::after { background: linear-gradient(135deg, #7b6cf0, #f08a6c); }
+
+.mode-toggle { display: inline-flex; padding: 3px; gap: 2px; border-radius: 10px; background: var(--chip); border: 1px solid var(--line); }
+.mode-toggle button {
+  border: none !important; background: transparent !important; box-shadow: none !important;
+  padding: 4px 9px; border-radius: 7px; color: var(--muted); font-size: 12px; display: inline-flex; align-items: center; gap: 5px;
+}
+.mode-toggle button[aria-pressed='true'] { background: var(--card) !important; color: var(--text); box-shadow: var(--card-shadow) !important; }
+.mode-toggle svg { width: 14px; height: 14px; }
+
+/* ================= panes ================= */
+.workspace { gap: 16px; padding: 16px 20px 20px; }
+.pane {
+  padding: 16px; gap: 12px;
+  background: var(--panel); border: 1px solid var(--pane-border); border-radius: 20px;
+  backdrop-filter: blur(24px) saturate(1.4); box-shadow: var(--pane-shadow);
+}
+.preview-pane { background: var(--preview-bg); }
+.pane-head h2 { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.preview-pane .pane-head { flex-wrap: wrap; }
+.settings { flex-wrap: wrap; gap: 10px; }
+.hint { line-height: 1.5; }
+
+/* ================= controls ================= */
+button { border-radius: 10px; transition: background 0.15s, border-color 0.15s, color 0.15s, filter 0.15s; }
+button:not(.primary):not(.ghost) { background: var(--btn); border-color: var(--btn-line); }
+button.primary { background: linear-gradient(135deg, var(--primary), var(--primary-2)); border: none; color: var(--primary-ink); box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 35%, transparent); }
+button.danger { color: var(--danger); }
+button.dirty { box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 30%, transparent); }
+select,
+input:not([type='color']):not([type='range']):not([type='checkbox']),
+textarea { border-radius: 10px; background: var(--btn); border-color: var(--btn-line); color: var(--text); }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.8; }
+input[type='checkbox'], input[type='range'] { accent-color: var(--primary); }
+.dirty-dot { background: var(--primary); }
+
+.chips .chip { border-color: var(--line); color: var(--muted); background: var(--chip); }
+.chips .chip.on { background: var(--text); border-color: var(--text); color: var(--bg); }
+.pill { background: var(--card); border: 1px solid var(--line); }
+.pill.warn { background: var(--warn-bg); color: var(--warn-ink); border-color: transparent; }
+
+/* ================= bricks ================= */
+.lib-group-title { font-size: 10.5px; margin-top: 10px; }
+.lib-list { gap: 6px; }
+.brick::before, .brick .b-type { display: none; }
+.brick, .placed {
+  border: 1px solid var(--card-line); border-radius: 12px; background: var(--card);
+  padding: 9px 10px 9px 26px; box-shadow: var(--card-shadow);
+}
+.brick::after, .placed::after {
+  content: ''; position: absolute; left: 11px; top: 14px; width: 7px; height: 7px; border-radius: 50%; background: var(--c);
+}
+.brick:hover, .placed:hover { border-color: color-mix(in srgb, var(--primary) 45%, transparent); box-shadow: var(--card-shadow-hover); }
+.brick .b-title { font-weight: 500; font-size: 13.5px; line-height: 1.35; padding-right: 50px; }
+.brick .b-actions { opacity: 0; transition: opacity 0.15s; }
+.brick:hover .b-actions, .brick:focus-within .b-actions { opacity: 1; }
+.brick .used { position: static; margin-top: 3px; }
+.brick .b-tags span { background: transparent; padding: 0; }
+.placed .p-title { font-weight: 500; line-height: 1.35; }
+.placed .p-actions button { color: var(--muted); }
+.placed.missing, .brick.error .b-title { color: var(--danger); }
+
+.sec { background: var(--sec); border-color: var(--sec-line); border-radius: 12px; }
+.sec-head input { font-size: 14px; border-color: transparent !important; background: transparent !important; }
+.sec-head input:hover, .sec-head input:focus { border-color: var(--line) !important; background: var(--card) !important; }
+.header-slot { border-width: 1px; border-color: var(--sec-line); border-radius: 12px; }
+.bullet-toggles label.off { color: var(--muted); }
+
+/* ================= preview ================= */
+#page { border-radius: 4px; box-shadow: var(--paper-shadow); }
+
+/* ================= dialog & toast ================= */
+dialog { background: var(--dialog); border-color: var(--line); border-radius: 18px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3); }
+dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px); }
+.fields input, .fields textarea, .fields select { color: var(--text); }
+.toast { background: var(--text); color: var(--bg); }
+
+/* ================= print: plain white, whatever the mode ================= */
+@media print {
+  body, body[data-mode='dark'] { background: #fff !important; color: #000; }
+  .pane, .preview-pane { background: none !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; }
+  #page { box-shadow: none !important; border-radius: 0; }
+}
+
+/* ================= preview zoom ================= */
+.zoom-toggle { display: inline-flex; padding: 3px; gap: 2px; border-radius: 10px; background: var(--chip); border: 1px solid var(--line); margin-left: auto; }
+.zoom-toggle button {
+  border: none !important; background: transparent !important; box-shadow: none !important;
+  padding: 3px 9px; border-radius: 7px; color: var(--muted); font-size: 12px;
+}
+.zoom-toggle button[aria-pressed='true'] { background: var(--card) !important; color: var(--text); box-shadow: var(--card-shadow) !important; }
+@media print { .zoom-toggle { display: none !important; } }

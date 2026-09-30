@@ -1,0 +1,31 @@
+name: Growth Marketing
+settings:
+  theme: modern
+  paper: letter
+  accent: "#0b7a5a"
+  fontScale: 1
+header: header-main
+sections:
+  - title: Summary
+    items:
+      - block: summary-growth
+  - title: Experience
+    items:
+      - block: experience-brightline
+        hide:
+          - Planned a three-city customer event series with sales that sourced $1.2M in pipeline
+      - block: experience-fieldhouse
+        hide:
+          - Organized photo and video shoots with outside vendors, keeping every shoot on budget
+      - block: experience-riverbend
+  - title: Education
+    items:
+      - block: education-state-university
+  - title: Skills
+    items:
+      - block: skills-marketing
+      - block: skills-tools
+  - title: Certifications & Awards
+    items:
+      - block: certification-google-ads
+      - block: award-presidents-club

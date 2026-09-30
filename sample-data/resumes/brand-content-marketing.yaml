@@ -1,0 +1,32 @@
+name: Brand & Content Marketing
+settings:
+  theme: classic
+  paper: letter
+  accent: "#7a2e5c"
+  fontScale: 1
+header: header-main
+sections:
+  - title: Summary
+    items:
+      - block: summary-brand
+  - title: Experience
+    items:
+      - block: experience-brightline
+        hide:
+          - Own a **$600K** annual paid budget across Google Ads, LinkedIn, and Meta; cut cost per qualified lead by 28% in one year
+          - Ran 40+ A/B tests on landing pages and ads, and set up the shared test log the whole team now uses
+      - block: experience-fieldhouse
+  - title: Projects
+    items:
+      - block: project-newsletter
+      - block: project-food-bank
+  - title: Education
+    items:
+      - block: education-state-university
+  - title: Skills
+    items:
+      - block: skills-marketing
+      - block: skills-languages
+  - title: Certifications
+    items:
+      - block: certification-hubspot-content
