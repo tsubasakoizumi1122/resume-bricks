@@ -2,6 +2,7 @@ import { TYPES, TYPE_ORDER, SECTION_PRESETS, blockLabel } from './schema.js';
 import { renderResume, renderMarkdown, esc, dateRange } from './render.js';
 import { parseResume } from './importer.js';
 import { buildWorkPrompt, parseClaudeReply } from './work.js';
+import { remapResume } from './hide.js';
 import { tailorResume, trimOnce, buildTailorPrompt, applyTailorReply, termLabel, ownBricks } from './tailor.js';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -120,8 +121,37 @@ function setDirty(v = true) {
   $('#btn-save').classList.toggle('dirty', v);
 }
 
+// ---- narrow screens: one pane at a time (Library / Layout / Preview)
+
+const narrow = () => matchMedia('(max-width: 1000px)').matches;
+
+function showPane(name, { scroll = true } = {}) {
+  document.body.dataset.pane = name;
+  $$('.pane-tabs [data-pane]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.pane === name)));
+  try { localStorage.setItem('resume-bricks:pane', name); } catch { /* ignore */ }
+  if (name === 'preview') requestAnimationFrame(() => fitPreview());
+  if (scroll && narrow()) $('.pane-tabs').scrollIntoView({ block: 'start' });
+}
+
+/** On a narrow screen, briefly mark a tab whose pane just changed out of sight. */
+function nudgeTab(name) {
+  if (!narrow() || document.body.dataset.pane === name) return;
+  const tab = $(`.pane-tabs [data-pane="${name}"]`);
+  tab?.classList.remove('nudge');
+  void tab?.offsetWidth;
+  tab?.classList.add('nudge');
+}
+
+function bindPaneTabs() {
+  let pane = 'library';
+  try { pane = localStorage.getItem('resume-bricks:pane') || pane; } catch { /* ignore */ }
+  showPane(pane, { scroll: false });
+  $$('.pane-tabs [data-pane]').forEach((b) => b.addEventListener('click', () => showPane(b.dataset.pane)));
+}
+
 /** Call after any change to the layout. */
 function changed() {
+  nudgeTab('layout');
   setDirty(true);
   renderLayout();
   renderPreview();
@@ -405,8 +435,9 @@ function renderPreview() {
 }
 
 // Preview zoom: "page" shows the whole resume in the pane, "width" fills the column, "actual" is 100%.
-let zoomMode = 'page';
-try { zoomMode = localStorage.getItem('resume-bricks:zoom') || 'page'; } catch { /* ignore */ }
+// Default: the whole page on wide screens, readable width on phones (unless you picked one).
+let zoomMode = matchMedia('(max-width: 700px)').matches ? 'width' : 'page';
+try { zoomMode = localStorage.getItem('resume-bricks:zoom') || zoomMode; } catch { /* ignore */ }
 
 function fitPreview() {
   const wrap = $('#paper-wrap');
@@ -946,8 +977,77 @@ function openEditor(block) {
   $('#ed-delete').hidden = !block;
   $('#ed-duplicate').hidden = !block;
   renderEditorFields(block || {});
+  renderEditorUsage(block);
   $('#editor').showModal();
   $('#editor-fields input:not([name="_title"]):not([name="_tags"]), #editor-fields textarea')?.focus();
+}
+
+// ---- which resumes a brick is in (editing a brick changes all of them)
+
+const compUses = (comp, id) =>
+  !!comp && (comp.header === id || (comp.sections || []).some((s) => (s.items || []).some((it) => it.block === id)));
+
+/** Names of the resumes using a brick: saved ones, with the open one (maybe unsaved) counted once. */
+function resumesUsing(id) {
+  const names = [];
+  for (const r of state.resumes) {
+    if (r.id === state.currentId) continue;
+    if (compUses(r, id)) names.push(r.name || r.id);
+  }
+  const here = compUses(state.comp, id);
+  return { here, others: names, total: names.length + (here ? 1 : 0) };
+}
+
+function renderEditorUsage(block) {
+  const box = $('#ed-usage');
+  if (!block) return (box.hidden = true);
+  const { here, others, total } = resumesUsing(block.id);
+  box.hidden = total === 0;
+  box.classList.toggle('shared', others.length > 0);
+  const list = (xs) => (xs.length > 3 ? `${xs.slice(0, 3).map((x) => `“${esc(x)}”`).join(', ')} and ${xs.length - 3} more` : xs.map((x) => `“${esc(x)}”`).join(', '));
+  $('#ed-usage-text').innerHTML = !others.length
+    ? 'Used only in this resume.'
+    : `<b>Shared brick.</b> Used in ${total} resume${total === 1 ? '' : 's'}${here ? ': this one and ' : ': '}${list(others)}. Saving changes ${total === 1 ? 'it' : 'all of them'}.` +
+      (here ? ' To change it here only, use <b>Save for this resume only</b>.' : '');
+  $('#ed-save-here').hidden = !(here && others.length);
+}
+
+/** Save the edits as a new brick and swap it into the open resume only. Other resumes keep the original. */
+async function saveForThisResumeOnly() {
+  const old = editing.block;
+  const body = collectEditor();
+  const where = state.comp.name || 'this resume';
+  body.title = `${blockLabel(body)} (${where})`.slice(0, 120);
+  const { id } = await api.send('POST', '/api/blocks', body);
+  const moved = remapResume(state.comp, old.id, old.bullets, body.bullets) || state.comp;
+  state.comp = {
+    ...moved,
+    header: moved.header === old.id ? id : moved.header,
+    sections: moved.sections.map((s) => ({ ...s, items: s.items.map((it) => (it.block === old.id ? { ...it, block: id } : it)) })),
+  };
+  await loadBlocks();
+  $('#editor').close();
+  changed();
+  toast(`Saved as a new brick for “${where}”. Other resumes are unchanged. Save the resume to keep it.`, false, 4500);
+}
+
+/**
+ * Bullets are hidden per resume by their text. After a brick's bullets change, move each
+ * resume's hidden choices onto the edited lines so nothing hidden reappears.
+ */
+async function carryHiddenBullets(id, oldBullets, newBullets) {
+  const same = JSON.stringify(oldBullets || []) === JSON.stringify(newBullets || []);
+  if (same) return;
+  for (const r of state.resumes) {
+    const next = remapResume(r, id, oldBullets, newBullets);
+    if (!next) continue;
+    const { id: rid, ...doc } = next;
+    await api.send('PUT', `/api/resumes/${encodeURIComponent(rid)}`, doc);
+  }
+  // The open layout may have unsaved edits: update it in place, without saving it.
+  const open = state.comp && remapResume(state.comp, id, oldBullets, newBullets);
+  if (open) state.comp = open;
+  await loadResumes();
 }
 
 function collectEditor() {
@@ -1012,6 +1112,7 @@ function bindEditor() {
       if (editing.block) {
         id = editing.block.id;
         await api.send('PUT', `/api/blocks/${encodeURIComponent(id)}`, body);
+        await carryHiddenBullets(id, editing.block.bullets, body.bullets);
       } else {
         ({ id } = await api.send('POST', '/api/blocks', body));
       }
@@ -1020,13 +1121,16 @@ function bindEditor() {
       renderLibrary();
       renderLayout();
       renderPreview();
-      toast(editing.block ? 'Brick saved' : 'Brick created');
+      const n = editing.block ? resumesUsing(id).total : 0;
+      toast(editing.block ? (n > 1 ? `Brick saved in all ${n} resumes that use it` : 'Brick saved') : 'Brick created');
       if (!editing.block) {
         const el = $(`.brick[data-id="${CSS.escape(id)}"]`);
         el?.scrollIntoView({ block: 'nearest' });
       }
     });
   });
+
+  $('#ed-save-here').addEventListener('click', () => guard(saveForThisResumeOnly));
 
   $('#ed-duplicate').addEventListener('click', () =>
     guard(async () => {
@@ -1702,6 +1806,7 @@ function bindTailor() {
   });
   $('#tailor-done').addEventListener('click', () => {
     dlg.close();
+    if (narrow()) showPane('preview');
     toast(`“${state.comp.name}” is ready. Save it (⌘S) to keep it.`, false, 4000);
   });
   $('#tailor-name').addEventListener('input', () => (tailor.nameTouched = !!$('#tailor-name').value.trim()));
@@ -1719,6 +1824,7 @@ async function boot() {
   bindWork();
   bindTailor();
   bindBackup();
+  bindPaneTabs();
   if (host.noFolder) $('#work-folder').closest('.w-row').hidden = true;
   await Promise.all([loadBlocks(), loadResumes()]);
   let last = null;

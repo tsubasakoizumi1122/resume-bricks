@@ -227,3 +227,37 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
 .storage-note.stale { background: var(--warn-bg); border-color: transparent; }
 .storage-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 @media print { .storage-note { display: none !important; } }
+
+/* brick editor: which resumes an edit will change */
+.ed-usage {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 18px 0; padding: 9px 12px;
+  border-radius: 10px; font-size: 12.5px; line-height: 1.45; color: var(--muted); background: var(--chip); border: 1px solid var(--line);
+}
+.ed-usage[hidden] { display: none; }
+.ed-usage.shared { color: var(--warn-ink); background: var(--warn-bg); border-color: transparent; }
+.ed-usage span { flex: 1 1 260px; }
+
+/* narrow screens: Library / Layout / Preview tabs instead of one very long page */
+.pane-tabs { display: none; }
+@media (max-width: 1000px) {
+  .pane-tabs {
+    display: flex; gap: 4px; position: sticky; top: 0; z-index: 30; margin: 0 12px; padding: 4px; border-radius: 12px;
+    background: var(--topbar); border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  }
+  .pane-tabs button {
+    flex: 1; border: none !important; background: transparent !important; box-shadow: none !important;
+    padding: 8px 6px; border-radius: 9px; font-weight: 600; color: var(--muted);
+  }
+  .pane-tabs button[aria-selected='true'] { background: var(--card) !important; color: var(--primary); box-shadow: var(--card-shadow) !important; }
+  .pane-tabs button.nudge { animation: tab-nudge 1.2s ease; }
+  @keyframes tab-nudge { 0%, 100% { background: transparent; } 30% { background: color-mix(in srgb, var(--primary) 22%, transparent); } }
+  body[data-pane='library'] .workspace > .layout,
+  body[data-pane='preview'] .workspace > .layout,
+  body[data-pane='layout'] .workspace > .library,
+  body[data-pane='preview'] .workspace > .library { display: none; }
+  /* The preview is moved off-screen rather than hidden, so page counting and "Fit on one page" keep working. */
+  body:not([data-pane='preview']) .workspace > .preview-pane {
+    position: absolute !important; left: -300vw; top: 0; width: 100vw; visibility: hidden; pointer-events: none;
+  }
+}
+@media print { .pane-tabs { display: none !important; } }

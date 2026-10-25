@@ -49,6 +49,12 @@
     </div>
   </header>
 
+  <!-- Narrow screens show one pane at a time -->
+  <nav class="pane-tabs chrome" role="tablist" aria-label="Panes">
+    <button type="button" role="tab" data-pane="library">Library</button>
+    <button type="button" role="tab" data-pane="layout">Layout</button>
+    <button type="button" role="tab" data-pane="preview">Preview</button>
+  </nav>
   <main class="workspace chrome">
     <!-- 1. Library: every brick you own -->
     <aside class="pane library" id="library" data-drop="library">
@@ -127,6 +133,10 @@
         <button type="button" class="ghost" data-close aria-label="Close">✕</button>
       </div>
       <div id="editor-fields" class="fields"></div>
+      <div id="ed-usage" class="ed-usage" hidden>
+        <span id="ed-usage-text"></span>
+        <button type="button" id="ed-save-here" class="small" hidden>Save for this resume only</button>
+      </div>
       <div class="dlg-foot">
         <button type="button" id="ed-delete" class="ghost danger">Delete brick</button>
         <button type="button" id="ed-duplicate" class="ghost">Duplicate</button>
