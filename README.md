@@ -81,6 +81,7 @@ Your browser opens at <http://localhost:4321>. On first run, a fictional sample 
 - **Save.** `Save` (or Ctrl/⌘+S) writes the layout to `my-data/resumes/*.yaml`. `Save as…` creates a copy, so you can keep one resume per company.
 - **Export.** **PDF / Print** opens the print dialog; choose "Save as PDF". **Export .md** downloads Markdown.
 - **Resume look.** Classic or Modern, US Letter or A4, accent color, and text size.
+- **Guided tour.** A quick tour opens the first time you visit. Replay it anytime with the **?** button at the top.
 - **Night mode.** The sun / moon / Auto switch in the top bar. Auto follows your OS setting. PDFs always print on white.
 - **Nothing is ever hard-deleted.** Deleted bricks and resumes move to `my-data/.trash/`.
 
@@ -243,6 +244,7 @@ npm start
 - **保存**：**Save**（Ctrl/⌘+S）で保存、**Save as…** で応募先ごとのコピーを作成
 - **書き出し**：**PDF / Print** →「PDFとして保存」。Markdownでも書き出せる
 - **見た目**：Classic / Modern、US Letter / A4、アクセントカラー、文字サイズ
+- **ガイドツアー**：初回に1分ほどのツアーが開きます。上部の **?** でいつでも見直せます
 - **ナイトモード**：右上の太陽／月／Auto で切り替え（Auto はOSの設定に合わせる。PDFは常に白で出力）
 
 ### データとプライバシー

@@ -635,6 +635,33 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
 }
 @media print { .pane-tabs { display: none !important; } }
 
+/* guided tour */
+.tour-btn {
+  width: 32px; height: 32px; padding: 0 !important; border-radius: 999px; font-weight: 700; font-size: 15px;
+  display: inline-grid; place-items: center;
+}
+.tour { position: fixed; inset: 0; z-index: 1000; }
+.tour-spot {
+  position: fixed; border-radius: 14px; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(20, 16, 45, 0.55), 0 0 0 2px var(--primary);
+  transition: left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+.tour.centered .tour-spot { box-shadow: 0 0 0 9999px rgba(20, 16, 45, 0.55); }
+.tour-pop {
+  position: fixed; width: min(340px, calc(100vw - 24px)); padding: 16px 18px 12px; border-radius: 16px;
+  background: var(--dialog); color: var(--text); border: 1px solid var(--line);
+  box-shadow: 0 18px 50px rgba(20, 16, 45, 0.35); transition: left 0.25s ease, top 0.25s ease;
+}
+.tour.centered .tour-pop { width: min(400px, calc(100vw - 24px)); }
+.tour-count { font-size: 11px; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 4px; }
+.tour-pop h3 { margin: 0 0 6px; font-size: 16px; }
+.tour-body { margin: 0 0 12px; font-size: 13.5px; line-height: 1.55; }
+.tour-foot { display: flex; align-items: center; gap: 6px; }
+.tour-foot .spacer { flex: 1; }
+.tour-skip { font-size: 12.5px; color: var(--muted); padding-left: 0 !important; }
+@media (prefers-reduced-motion: reduce) { .tour-spot, .tour-pop { transition: none; } }
+@media print { .tour, .tour-btn { display: none !important; } }
+
 </style>
   <style id="page-style"></style>
 <style>.demo-banner{background:rgba(108,92,231,.12);color:inherit;font-size:12px;padding:6px 20px;border-bottom:1px solid rgba(108,92,231,.2)}.demo-banner code{background:rgba(255,255,255,.35);padding:0 4px;border-radius:4px}@media print{.demo-banner{display:none}}</style>
@@ -668,6 +695,7 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
     </div>
 
     <div class="group right">
+      <button id="btn-tour" class="tour-btn" type="button" title="Take the tour" aria-label="Take the tour">?</button>
       <div class="mode-toggle" role="group" aria-label="Appearance">
         <button type="button" data-mode="light" title="Light mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
         <button type="button" data-mode="dark" title="Night mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
@@ -1814,6 +1842,204 @@ function parseClaudeReply(text) {
   return { bricks, questions };
 }
 
+// A resume hides bullets by their text (item.hide: ["bullet text", ...]), which keeps the
+// YAML readable. When a brick's bullets are edited, this carries each hidden choice over
+// to the edited line, so rewording a bullet never brings it back into a resume.
+// Pure functions: shared by the browser and the tests.
+
+const bulletList = (v) => (Array.isArray(v) ? v : v ? [v] : []).map(String).filter((x) => x.trim());
+
+/** Old line index -> new line index (or -1 if the line was removed). */
+function alignBullets(oldList, newList) {
+  const a = bulletList(oldList);
+  const b = bulletList(newList);
+  // Longest common subsequence of unchanged lines anchors the alignment.
+  const n = a.length;
+  const m = b.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--)
+    for (let j = m - 1; j >= 0; j--) dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const map = new Array(n).fill(-1);
+  const anchors = [];
+  for (let i = 0, j = 0; i < n && j < m; ) {
+    if (a[i] === b[j]) {
+      anchors.push([i, j]);
+      map[i] = j;
+      i++;
+      j++;
+    } else if (dp[i + 1][j] >= dp[i][j + 1]) i++;
+    else j++;
+  }
+  // Between anchors, changed lines pair up in order (an edited line stays "the same bullet").
+  let pi = 0;
+  let pj = 0;
+  for (const [ai, aj] of [...anchors, [n, m]]) {
+    const olds = [];
+    const news = [];
+    for (let i = pi; i < ai; i++) olds.push(i);
+    for (let j = pj; j < aj; j++) news.push(j);
+    for (let k = 0; k < Math.min(olds.length, news.length); k++) map[olds[k]] = news[k];
+    pi = ai + 1;
+    pj = aj + 1;
+  }
+  return map;
+}
+
+/** Carry hidden bullets over an edit. Returns the new hide list (in the new bullet order). */
+function remapHidden(oldList, newList, hide) {
+  const a = bulletList(oldList);
+  const b = bulletList(newList);
+  const hidden = new Set(hide || []);
+  if (!hidden.size) return [];
+  const map = alignBullets(a, b);
+  const keep = new Set();
+  a.forEach((text, i) => {
+    if (!hidden.has(text)) return;
+    if (b.includes(text)) keep.add(text); // unchanged (maybe moved): still hidden
+    else if (map[i] >= 0) keep.add(b[map[i]]); // reworded: hide the new wording
+  });
+  // Hidden lines that never were in the old list but exist now stay hidden too.
+  for (const text of hidden) if (b.includes(text)) keep.add(text);
+  return b.filter((t, i) => keep.has(t) && b.indexOf(t) === i);
+}
+
+/**
+ * Apply a brick edit to a resume layout: returns a new layout if any hide list changed, else null.
+ * Works on the resume's header and every section item that uses the brick.
+ */
+function remapResume(comp, blockId, oldList, newList) {
+  let changed = false;
+  const sections = (comp.sections || []).map((s) => ({
+    ...s,
+    items: (s.items || []).map((it) => {
+      if (it.block !== blockId || !it.hide?.length) return it;
+      const hide = remapHidden(oldList, newList, it.hide);
+      const same = hide.length === it.hide.length && hide.every((h, i) => h === it.hide[i]);
+      if (same) return it;
+      changed = true;
+      const { hide: _, ...rest } = it;
+      return hide.length ? { ...rest, hide } : rest;
+    }),
+  }));
+  return changed ? { ...comp, sections } : null;
+}
+
+// A short guided tour: dims the app, spotlights one part at a time and explains it.
+// No dependencies. Steps whose target is missing or hidden are skipped.
+
+/**
+ * Steps run in order; pass only the steps that apply (filter beforehand).
+ * @param {Array<{target?: string|(() => Element|null), title: string, body: string, before?: () => void}>} steps
+ * @param {{ onDone?: (finished: boolean) => void }} opts
+ */
+function startTour(steps, { onDone } = {}) {
+  document.querySelector('.tour')?.remove();
+  const root = document.createElement('div');
+  root.className = 'tour';
+  root.innerHTML = `
+    <div class="tour-spot" aria-hidden="true"></div>
+    <div class="tour-pop" role="dialog" aria-modal="true" aria-labelledby="tour-title">
+      <div class="tour-count"></div>
+      <h3 id="tour-title"></h3>
+      <p class="tour-body"></p>
+      <div class="tour-foot">
+        <button type="button" class="ghost tour-skip">Skip tour</button>
+        <span class="spacer"></span>
+        <button type="button" class="tour-back">Back</button>
+        <button type="button" class="primary tour-next">Next</button>
+      </div>
+    </div>`;
+  document.body.append(root);
+  const spot = root.querySelector('.tour-spot');
+  const pop = root.querySelector('.tour-pop');
+  const prevFocus = document.activeElement;
+  let i = 0;
+  let target = null;
+
+  const find = (s) => {
+    const el = typeof s.target === 'function' ? s.target() : s.target ? document.querySelector(s.target) : null;
+    return el && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' ? el : null;
+  };
+  // Only steps that can be shown right now (a step without a target is a centered card).
+  const usable = (k) => {
+    const s = steps[k];
+    s.before?.();
+    return !s.target || !!find(s);
+  };
+
+  function place() {
+    const pad = 6;
+    const vw = innerWidth;
+    const vh = innerHeight;
+    if (!target) {
+      spot.style.cssText = `left:${vw / 2}px;top:${vh / 2}px;width:0;height:0`;
+      pop.style.left = `${Math.max(12, (vw - pop.offsetWidth) / 2)}px`;
+      pop.style.top = `${Math.max(12, (vh - pop.offsetHeight) / 2)}px`;
+      return;
+    }
+    const r = target.getBoundingClientRect();
+    const top = Math.max(4, r.top - pad);
+    const bottom = Math.min(vh - 4, r.bottom + pad);
+    spot.style.cssText = `left:${r.left - pad}px;top:${top}px;width:${r.width + pad * 2}px;height:${Math.max(0, bottom - top)}px`;
+    const pw = pop.offsetWidth;
+    const ph = pop.offsetHeight;
+    const gap = 12;
+    let x;
+    let y;
+    if (vh - bottom >= ph + gap) [x, y] = [r.left, bottom + gap]; // below
+    else if (top >= ph + gap) [x, y] = [r.left, top - ph - gap]; // above
+    else if (vw - r.right >= pw + gap) [x, y] = [r.right + gap, Math.max(12, r.top)]; // right
+    else if (r.left >= pw + gap) [x, y] = [r.left - pw - gap, Math.max(12, r.top)]; // left
+    else [x, y] = [(vw - pw) / 2, vh - ph - 12]; // big target: pin to the bottom
+    pop.style.left = `${Math.min(Math.max(12, x), vw - pw - 12)}px`;
+    pop.style.top = `${Math.min(Math.max(12, y), vh - ph - 12)}px`;
+  }
+
+  function show(k, dir = 1) {
+    while (k >= 0 && k < steps.length && !usable(k)) k += dir;
+    if (k < 0) k = i;
+    if (k >= steps.length) return end(true);
+    i = k;
+    const s = steps[i];
+    target = s.target ? find(s) : null;
+    root.querySelector('.tour-count').textContent = `${i + 1} / ${steps.length}`;
+    root.querySelector('#tour-title').textContent = s.title;
+    root.querySelector('.tour-body').innerHTML = s.body;
+    root.querySelector('.tour-back').hidden = i === 0;
+    root.querySelector('.tour-next').textContent = i === steps.length - 1 ? 'Done' : 'Next';
+    root.classList.toggle('centered', !target);
+    target?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    requestAnimationFrame(place);
+    root.querySelector('.tour-next').focus({ preventScroll: true });
+  }
+
+  function end(finished) {
+    removeEventListener('resize', place);
+    removeEventListener('scroll', place, true);
+    removeEventListener('keydown', onKey, true);
+    root.remove();
+    prevFocus?.focus?.({ preventScroll: true });
+    onDone?.(finished);
+  }
+
+  function onKey(e) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      end(false);
+    } else if (e.key === 'ArrowRight') show(i + 1, 1);
+    else if (e.key === 'ArrowLeft' && i > 0) show(i - 1, -1);
+  }
+
+  root.querySelector('.tour-next').addEventListener('click', () => show(i + 1, 1));
+  root.querySelector('.tour-back').addEventListener('click', () => show(i - 1, -1));
+  root.querySelector('.tour-skip').addEventListener('click', () => end(false));
+  addEventListener('resize', place);
+  addEventListener('scroll', place, true);
+  addEventListener('keydown', onKey, true);
+  show(0);
+}
+
 // Vocabulary for "Tailor to a job", grouped by field so any occupation can be matched.
 // Each field can add:
 //   phrases  [regex, token]  multi-word or punctuated terms turned into one token before splitting
@@ -2716,6 +2942,7 @@ const termLabel = (c, surface) => TERM_LABELS[c] || surface?.get(c) || c;
 
 
 
+
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 
@@ -2858,6 +3085,91 @@ function bindPaneTabs() {
   try { pane = localStorage.getItem('resume-bricks:pane') || pane; } catch { /* ignore */ }
   showPane(pane, { scroll: false });
   $$('.pane-tabs [data-pane]').forEach((b) => b.addEventListener('click', () => showPane(b.dataset.pane)));
+}
+
+// ---- first-visit tour (replay with the ? button)
+
+const LS_TOUR = 'resume-bricks:tour-seen';
+
+function tourSteps() {
+  const pane = (name) => () => narrow() && showPane(name, { scroll: false });
+  const hasSample = state.blocks.some((b) => b.sample);
+  const steps = [
+    {
+      title: 'Welcome to Resume Bricks',
+      body: 'Write up each job, project, and skill once. Then mix and match them into a tailored resume for every job you apply to. This quick tour takes about a minute.',
+    },
+    {
+      target: '#library',
+      before: pane('library'),
+      title: 'Your library',
+      body: `Everything you’ve done lives here, one brick per job, project, degree, or skill set.${hasSample ? ' Bricks tagged <b>sample</b> belong to a made-up person, so feel free to experiment.' : ''}`,
+    },
+    {
+      target: '.layout',
+      before: pane('layout'),
+      title: 'Build a resume',
+      body: 'Each resume is simply the bricks you choose, in the order you want. Click <b>＋</b> on a brick (or drag it here) to add it, and drag <b>⋮⋮</b> to rearrange sections.',
+    },
+    {
+      target: () => $('.layout [data-act="bullets"]'),
+      before: pane('layout'),
+      title: 'Choose which bullets to show',
+      body: 'Keep every version of a bullet in the brick, then pick the ones that fit this job. Your choices only affect this resume.',
+    },
+    {
+      target: '#preview-pane',
+      before: pane('preview'),
+      title: 'Live preview',
+      body: 'This is exactly what will print, including page breaks and the page count. Click the page to zoom in or out.',
+    },
+    {
+      target: '#btn-tailor',
+      title: 'Tailor it to a job',
+      body: 'Paste a job posting to get a first draft built only from your own bricks. You’ll also see which requirements none of your bricks cover, so you never claim something you haven’t done.',
+    },
+    {
+      target: '#btn-print',
+      title: 'Save and export',
+      body: 'Click <b>Save</b> (⌘S) to keep this resume. When you’re ready to apply, click <b>PDF / Print</b> and choose “Save as PDF.”',
+    },
+    {
+      target: () => (hasSample ? $('#sample-banner') : $('#btn-import')),
+      before: pane('library'),
+      title: 'Start with your own experience',
+      body: hasSample
+        ? 'When you’re ready, click <b>Start with my own</b>. The sample data moves to the trash, and you can import your current resume (PDF or Word). It’s split into bricks, and you review everything before it’s added.'
+        : 'Click <b>Import</b> to turn an existing resume (PDF or Word) into bricks. You review everything before it’s added.',
+    },
+  ];
+  if (host.backup) {
+    steps.push({
+      target: '#storage-note',
+      before: pane('library'),
+      title: 'Your data stays in this browser',
+      body: 'Nothing is uploaded. Since your data lives only in this browser, <b>download a backup</b> every so often, and always before clearing your browser data.',
+    });
+  }
+  steps.push({ title: 'You’re all set', body: 'You can replay this tour anytime with the <b>?</b> button at the top.' });
+  return steps;
+}
+
+function runTour() {
+  startTour(tourSteps(), {
+    onDone: () => {
+      try { localStorage.setItem(LS_TOUR, '1'); } catch { /* ignore */ }
+      if (narrow()) showPane('library', { scroll: false });
+    },
+  });
+}
+
+function maybeAutoTour() {
+  let seen = true;
+  try { seen = !!localStorage.getItem(LS_TOUR); } catch { /* storage off: don't nag */ }
+  if (seen || document.querySelector('dialog[open]') || matchMedia('print').matches) return;
+  // Only for newcomers: the sample person is still here.
+  if (!state.blocks.some((b) => b.sample)) return;
+  setTimeout(() => !document.querySelector('dialog[open]') && runTour(), 500);
 }
 
 /** Call after any change to the layout. */
@@ -4536,6 +4848,7 @@ async function boot() {
   bindTailor();
   bindBackup();
   bindPaneTabs();
+  $('#btn-tour').addEventListener('click', runTour);
   if (host.noFolder) $('#work-folder').closest('.w-row').hidden = true;
   await Promise.all([loadBlocks(), loadResumes()]);
   let last = null;
@@ -4546,6 +4859,7 @@ async function boot() {
     state.comp = newComp();
     renderAll();
   }
+  maybeAutoTour();
 }
 
 guard(boot);

@@ -22,7 +22,17 @@ async function readKind(kind) {
 const stripModule = (src) =>
   src.replace(/^import .*$/gm, '').replace(/^export (const|function) /gm, '$1 ');
 
-const files = Object.fromEntries(await Promise.all(['schema.js', 'render.js', 'importer.js', 'work.js', 'vocab.js', 'tailor.js', 'app.js'].map(async (f) => [f, await pub(f)])));
+// Every module app.js uses, dependencies first (read from the import lines, so new files are never missed).
+async function moduleOrder(entry, seen = new Set(), out = []) {
+  if (seen.has(entry)) return out;
+  seen.add(entry);
+  const src = await pub(entry);
+  for (const [, dep] of src.matchAll(/^import .* from '\.\/([\w.-]+\.js)';$/gm)) await moduleOrder(dep, seen, out);
+  out.push(entry);
+  return out;
+}
+const ORDER = await moduleOrder('app.js');
+const files = Object.fromEntries(await Promise.all(ORDER.map(async (f) => [f, await pub(f)])));
 const data = { blocks: await readKind('blocks'), resumes: await readKind('resumes') };
 
 const shim = `
@@ -59,7 +69,7 @@ window.fetch = async (url, opts = {}) => {
 const css = await pub('styles.css');
 const resumeCss = await pub('resume.css');
 const themeCss = await pub('theme.css');
-const js = ['schema.js', 'render.js', 'importer.js', 'work.js', 'vocab.js', 'tailor.js', 'app.js'].map((f) => stripModule(files[f])).join('\n');
+const js = ORDER.map((f) => stripModule(files[f])).join('\n');
 const html = (await pub('index.html'))
   .replace('<link rel="stylesheet" href="styles.css" />', () => `<style>\n${css}\n</style>`)
   .replace('<link rel="stylesheet" href="resume.css" />', () => `<style>\n${resumeCss}\n</style>`)
@@ -80,4 +90,4 @@ const html = (await pub('index.html'))
 const out = path.join(ROOT, 'docs', 'demo.html');
 await fs.mkdir(path.dirname(out), { recursive: true });
 await fs.writeFile(out, html);
-console.log(`Wrote ${path.relative(ROOT, out)} (${(html.length / 1024).toFixed(0)} KB)`);
+console.log(`Wrote ${path.relative(ROOT, out)} (${(html.length / 1024).toFixed(0)} KB; ${ORDER.join(', ')})`);

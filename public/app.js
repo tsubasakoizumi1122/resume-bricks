@@ -3,6 +3,7 @@ import { renderResume, renderMarkdown, esc, dateRange } from './render.js';
 import { parseResume } from './importer.js';
 import { buildWorkPrompt, parseClaudeReply } from './work.js';
 import { remapResume } from './hide.js';
+import { startTour } from './tour.js';
 import { tailorResume, trimOnce, buildTailorPrompt, applyTailorReply, termLabel, ownBricks } from './tailor.js';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -147,6 +148,91 @@ function bindPaneTabs() {
   try { pane = localStorage.getItem('resume-bricks:pane') || pane; } catch { /* ignore */ }
   showPane(pane, { scroll: false });
   $$('.pane-tabs [data-pane]').forEach((b) => b.addEventListener('click', () => showPane(b.dataset.pane)));
+}
+
+// ---- first-visit tour (replay with the ? button)
+
+const LS_TOUR = 'resume-bricks:tour-seen';
+
+function tourSteps() {
+  const pane = (name) => () => narrow() && showPane(name, { scroll: false });
+  const hasSample = state.blocks.some((b) => b.sample);
+  const steps = [
+    {
+      title: 'Welcome to Resume Bricks',
+      body: 'Write up each job, project, and skill once. Then mix and match them into a tailored resume for every job you apply to. This quick tour takes about a minute.',
+    },
+    {
+      target: '#library',
+      before: pane('library'),
+      title: 'Your library',
+      body: `Everything you’ve done lives here, one brick per job, project, degree, or skill set.${hasSample ? ' Bricks tagged <b>sample</b> belong to a made-up person, so feel free to experiment.' : ''}`,
+    },
+    {
+      target: '.layout',
+      before: pane('layout'),
+      title: 'Build a resume',
+      body: 'Each resume is simply the bricks you choose, in the order you want. Click <b>＋</b> on a brick (or drag it here) to add it, and drag <b>⋮⋮</b> to rearrange sections.',
+    },
+    {
+      target: () => $('.layout [data-act="bullets"]'),
+      before: pane('layout'),
+      title: 'Choose which bullets to show',
+      body: 'Keep every version of a bullet in the brick, then pick the ones that fit this job. Your choices only affect this resume.',
+    },
+    {
+      target: '#preview-pane',
+      before: pane('preview'),
+      title: 'Live preview',
+      body: 'This is exactly what will print, including page breaks and the page count. Click the page to zoom in or out.',
+    },
+    {
+      target: '#btn-tailor',
+      title: 'Tailor it to a job',
+      body: 'Paste a job posting to get a first draft built only from your own bricks. You’ll also see which requirements none of your bricks cover, so you never claim something you haven’t done.',
+    },
+    {
+      target: '#btn-print',
+      title: 'Save and export',
+      body: 'Click <b>Save</b> (⌘S) to keep this resume. When you’re ready to apply, click <b>PDF / Print</b> and choose “Save as PDF.”',
+    },
+    {
+      target: () => (hasSample ? $('#sample-banner') : $('#btn-import')),
+      before: pane('library'),
+      title: 'Start with your own experience',
+      body: hasSample
+        ? 'When you’re ready, click <b>Start with my own</b>. The sample data moves to the trash, and you can import your current resume (PDF or Word). It’s split into bricks, and you review everything before it’s added.'
+        : 'Click <b>Import</b> to turn an existing resume (PDF or Word) into bricks. You review everything before it’s added.',
+    },
+  ];
+  if (host.backup) {
+    steps.push({
+      target: '#storage-note',
+      before: pane('library'),
+      title: 'Your data stays in this browser',
+      body: 'Nothing is uploaded. Since your data lives only in this browser, <b>download a backup</b> every so often, and always before clearing your browser data.',
+    });
+  }
+  steps.push({ title: 'You’re all set', body: 'You can replay this tour anytime with the <b>?</b> button at the top.' });
+  return steps;
+}
+
+function runTour() {
+  startTour(tourSteps(), {
+    onDone: () => {
+      try { localStorage.setItem(LS_TOUR, '1'); } catch { /* ignore */ }
+      if (narrow()) showPane('library', { scroll: false });
+    },
+  });
+}
+
+function maybeAutoTour() {
+  let seen = true;
+  try { seen = !!localStorage.getItem(LS_TOUR); } catch { /* storage off: don't nag */ }
+  if (seen || document.querySelector('dialog[open]') || matchMedia('print').matches) return;
+  // Only for newcomers: the sample person is still here.
+  if (!state.blocks.some((b) => b.sample)) return;
+  setTimeout(() => !document.querySelector('dialog[open]') && runTour(), 500);
 }
 
 /** Call after any change to the layout. */
@@ -1825,6 +1911,7 @@ async function boot() {
   bindTailor();
   bindBackup();
   bindPaneTabs();
+  $('#btn-tour').addEventListener('click', runTour);
   if (host.noFolder) $('#work-folder').closest('.w-row').hidden = true;
   await Promise.all([loadBlocks(), loadResumes()]);
   let last = null;
@@ -1835,6 +1922,7 @@ async function boot() {
     state.comp = newComp();
     renderAll();
   }
+  maybeAutoTour();
 }
 
 guard(boot);

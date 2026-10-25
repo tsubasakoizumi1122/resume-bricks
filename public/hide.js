@@ -3,12 +3,12 @@
 // to the edited line, so rewording a bullet never brings it back into a resume.
 // Pure functions: shared by the browser and the tests.
 
-const toList = (v) => (Array.isArray(v) ? v : v ? [v] : []).map(String).filter((x) => x.trim());
+const bulletList = (v) => (Array.isArray(v) ? v : v ? [v] : []).map(String).filter((x) => x.trim());
 
 /** Old line index -> new line index (or -1 if the line was removed). */
 export function alignBullets(oldList, newList) {
-  const a = toList(oldList);
-  const b = toList(newList);
+  const a = bulletList(oldList);
+  const b = bulletList(newList);
   // Longest common subsequence of unchanged lines anchors the alignment.
   const n = a.length;
   const m = b.length;
@@ -43,8 +43,8 @@ export function alignBullets(oldList, newList) {
 
 /** Carry hidden bullets over an edit. Returns the new hide list (in the new bullet order). */
 export function remapHidden(oldList, newList, hide) {
-  const a = toList(oldList);
-  const b = toList(newList);
+  const a = bulletList(oldList);
+  const b = bulletList(newList);
   const hidden = new Set(hide || []);
   if (!hidden.size) return [];
   const map = alignBullets(a, b);

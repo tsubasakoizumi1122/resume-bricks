@@ -261,3 +261,30 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
   }
 }
 @media print { .pane-tabs { display: none !important; } }
+
+/* guided tour */
+.tour-btn {
+  width: 32px; height: 32px; padding: 0 !important; border-radius: 999px; font-weight: 700; font-size: 15px;
+  display: inline-grid; place-items: center;
+}
+.tour { position: fixed; inset: 0; z-index: 1000; }
+.tour-spot {
+  position: fixed; border-radius: 14px; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(20, 16, 45, 0.55), 0 0 0 2px var(--primary);
+  transition: left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+.tour.centered .tour-spot { box-shadow: 0 0 0 9999px rgba(20, 16, 45, 0.55); }
+.tour-pop {
+  position: fixed; width: min(340px, calc(100vw - 24px)); padding: 16px 18px 12px; border-radius: 16px;
+  background: var(--dialog); color: var(--text); border: 1px solid var(--line);
+  box-shadow: 0 18px 50px rgba(20, 16, 45, 0.35); transition: left 0.25s ease, top 0.25s ease;
+}
+.tour.centered .tour-pop { width: min(400px, calc(100vw - 24px)); }
+.tour-count { font-size: 11px; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 4px; }
+.tour-pop h3 { margin: 0 0 6px; font-size: 16px; }
+.tour-body { margin: 0 0 12px; font-size: 13.5px; line-height: 1.55; }
+.tour-foot { display: flex; align-items: center; gap: 6px; }
+.tour-foot .spacer { flex: 1; }
+.tour-skip { font-size: 12.5px; color: var(--muted); padding-left: 0 !important; }
+@media (prefers-reduced-motion: reduce) { .tour-spot, .tour-pop { transition: none; } }
+@media print { .tour, .tour-btn { display: none !important; } }
