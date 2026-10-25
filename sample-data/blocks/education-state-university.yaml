@@ -1,8 +1,9 @@
 type: education
-school: State University (fictional)
+school: State University
 degree: B.A. Communication, Minor in Business
-location: Austin, TX
+location: City, ST
 start: 2017-08
 end: 2021-05
 bullets:
   - "Relevant coursework: Consumer Behavior, Marketing Research, Digital Media Strategy, Statistics"
+sample: true

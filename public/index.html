@@ -55,6 +55,18 @@
         <h2>Library <span class="muted" id="brick-count"></span></h2>
         <span class="head-actions"><button id="btn-import" class="small" title="Turn an existing resume into bricks">Import</button><button id="btn-work" class="small" title="Make bricks from your reports, slides or code">From work</button><button id="btn-new-brick" class="small">+ New</button></span>
       </div>
+      <div id="storage-note" class="storage-note" hidden>
+        <span id="storage-text"></span>
+        <span class="storage-actions">
+          <button type="button" id="btn-backup" class="small">Download backup</button>
+          <button type="button" id="btn-restore" class="small">Restore</button>
+          <input type="file" id="restore-file" accept=".zip,.yaml,.yml" hidden />
+        </span>
+      </div>
+      <div id="sample-banner" class="sample-banner" hidden>
+        <span id="sample-banner-text"></span>
+        <button id="btn-start-own" class="small primary" type="button">Start with my own</button>
+      </div>
       <input id="lib-search" type="search" placeholder="Search bricks or tags…" />
       <div id="lib-filters" class="chips"></div>
       <div id="lib-list" class="lib-list"></div>
@@ -97,6 +109,7 @@
           <button type="button" data-zoom="width" title="Fill the column width">Fit width</button>
           <button type="button" data-zoom="actual" title="Actual size">100%</button>
         </div>
+        <button type="button" id="zoom-hint" class="zoom-hint" hidden></button>
         <span id="page-count" class="pill"></span>
       </div>
       <div id="paper-wrap" class="paper-wrap">
@@ -264,6 +277,7 @@
       <span class="spacer"></span>
       <button type="button" data-tailor-close>Close</button>
       <button type="button" id="tailor-go" class="primary">Build resume</button>
+      <button type="button" id="tailor-done" class="primary" hidden>See the resume →</button>
     </div>
   </dialog>
 

@@ -1,8 +1,8 @@
 type: experience
 tags: [saas, growth, paid, email, content]
 role: Marketing Manager
-org: Brightline Software (fictional)
-location: Austin, TX
+org: Software Company
+location: City, ST
 start: 2023-04
 end: present
 bullets:
@@ -12,3 +12,4 @@ bullets:
   - Ran 40+ A/B tests on landing pages and ads, and set up the shared test log the whole team now uses
   - Planned a three-city customer event series with sales that sourced $1.2M in pipeline
   - Manage one marketing coordinator and two freelance designers
+sample: true

@@ -7,3 +7,7 @@ my-data/
 # Local-only: old working copy and editor/preview settings
 resume-bricks/
 .claude/
+# Local working notes
+HANDOFF.md
+# Files waiting to be deleted by hand
+_to_delete/

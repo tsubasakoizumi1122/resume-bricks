@@ -185,3 +185,45 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
 }
 .zoom-toggle button[aria-pressed='true'] { background: var(--card) !important; color: var(--text); box-shadow: var(--card-shadow) !important; }
 @media print { .zoom-toggle { display: none !important; } }
+
+/* zoom: make the toggle easier to spot, and say so when whole-page text is too small to read */
+.zoom-toggle button { font-size: 12.5px; font-weight: 500; color: var(--text); opacity: 0.7; }
+.zoom-toggle button:hover { opacity: 1; }
+.zoom-toggle button[aria-pressed='true'] { opacity: 1; color: var(--primary) !important; }
+.zoom-hint {
+  font-size: 12px; padding: 3px 10px; border-radius: 999px; cursor: pointer;
+  background: color-mix(in srgb, var(--primary) 14%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent) !important;
+  color: var(--primary); font-weight: 600;
+}
+.zoom-hint:hover { background: color-mix(in srgb, var(--primary) 22%, transparent) !important; }
+#page.zoomable { cursor: zoom-in; }
+#page.unzoomable { cursor: zoom-out; }
+@media print { .zoom-hint { display: none !important; } #page.zoomable, #page.unzoomable { cursor: auto; } }
+
+/* sample data */
+.sample-banner {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 12px; border-radius: 12px; font-size: 12.5px; line-height: 1.4;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
+}
+.sample-banner[hidden] { display: none; }
+.sample-banner span { flex: 1 1 160px; }
+.sample-tag {
+  display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 999px; font-size: 10px;
+  letter-spacing: 0.02em; text-transform: lowercase; background: var(--chip); border: 1px solid var(--line); color: var(--muted);
+}
+.brick.sample { opacity: 0.82; }
+
+/* web version: where your data lives, and backups */
+.storage-note {
+  display: flex; flex-direction: column; gap: 6px; margin-top: 6px; padding: 10px 12px; border-radius: 12px;
+  font-size: 12px; line-height: 1.4; color: var(--muted); background: var(--chip); border: 1px solid var(--line);
+}
+.storage-note[hidden] { display: none; }
+.storage-note b { color: var(--text); }
+.storage-note .stale { color: var(--warn-ink); font-weight: 600; }
+.storage-note.stale { background: var(--warn-bg); border-color: transparent; }
+.storage-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+@media print { .storage-note { display: none !important; } }

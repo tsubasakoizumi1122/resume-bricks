@@ -18,10 +18,12 @@
   },
   "scripts": {
     "start": "node server.js",
+    "demo": "node scripts/demo.js",
     "dev": "NO_OPEN=1 node --watch server.js",
     "test": "node --test",
     "build:demo": "node scripts/build-demo.js",
-    "build:samples": "node scripts/build-samples.js"
+    "build:samples": "node scripts/build-samples.js",
+    "build:web": "node scripts/build-web.js"
   },
   "engines": {
     "node": ">=18.17"
@@ -39,5 +41,8 @@
     "mammoth": "^1.12.3",
     "unpdf": "^1.8.1",
     "yaml": "^2.5.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.2"
   }
 }

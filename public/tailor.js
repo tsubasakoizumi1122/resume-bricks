@@ -59,10 +59,33 @@ export function brickText(b) {
   return parts.join(' . ');
 }
 
+// ---------------------------------------------------------------- which bricks count
+
+/** Bricks to tailor from: your own ones. The bundled sample person (sample: true) is only
+ *  used when the library has nothing else in it, e.g. in the demo. */
+export function ownBricks(bricks) {
+  const usable = (bricks || []).filter((b) => b && b.type && b.type !== '_error');
+  const own = usable.filter((b) => !b.sample);
+  return own.length ? own : usable;
+}
+
+// Company names say nothing about the skills a job needs ("Example Labs" is not "lab techniques").
+const ORG_SUFFIX =
+  'Labs|Laboratories|Inc|Incorporated|LLC|L\\.L\\.C|Ltd|Limited|Corp|Corporation|Co|Company|GmbH|PLC|LLP|LP|K\\.K|Holdings|Ventures|Technologies|Studios?';
+const ORG_RE = new RegExp(
+  `\\b(?:(?:[A-Z][\\w'’-]*|&)\\.?[ \\t]+){1,4}(?:${ORG_SUFFIX})\\b\\.?`,
+  'g',
+);
+/** Drop company names like "Example Labs" or "Harbor & Pine, Inc." from a job post before matching. */
+export function stripOrgNames(text) {
+  return String(text || '').replace(/,\s+(?=(?:Inc|LLC|Ltd|Corp)\b)/g, ' ').replace(ORG_RE, ' ');
+}
+
 // ---------------------------------------------------------------- scoring
 
 /** Job post + bricks -> weights for the job's concepts and scores for every brick and bullet. */
 export function analyzeJob(jobText, bricks) {
+  jobText = stripOrgNames(jobText);
   const usable = bricks.filter((b) => b && b.type && b.type !== '_error');
   const docs = usable.map((b) => new Set(concepts(brickText(b))));
   const N = docs.length || 1;
@@ -142,6 +165,7 @@ function pickBullets(s, keep) {
  * Returns { comp, report } where comp is a normal resume layout and report explains the choices.
  */
 export function tailorResume({ jobText, bricks, base = {}, name, today = new Date() }) {
+  bricks = ownBricks(bricks);
   const analysis = analyzeJob(jobText, bricks);
   const byType = (t) => analysis.scored.filter((s) => s.brick.type === t);
   const picked = new Map(); // type -> scored list
@@ -267,7 +291,7 @@ export function trimOnce(comp, scores) {
 // ---------------------------------------------------------------- refine with Claude (copy-paste)
 
 export function buildTailorPrompt({ jobText, bricks, comp }) {
-  const catalog = bricks
+  const catalog = ownBricks(bricks)
     .filter((b) => b.type && b.type !== '_error' && b.type !== 'header')
     .map((b) => {
       const o = { id: b.id, type: b.type, label: blockLabel(b) };
@@ -311,7 +335,7 @@ Reply with one JSON object only (a \`\`\`json code block is fine):
 /** Claude's reply -> a layout that only uses existing bricks and bullets. */
 export function applyTailorReply(text, bricks, base) {
   const data = extractJson(String(text || ''));
-  const byId = new Map(bricks.map((b) => [b.id, b]));
+  const byId = new Map(ownBricks(bricks).map((b) => [b.id, b]));
   const sections = [];
   const skipped = [];
   for (const sec of Array.isArray(data.sections) ? data.sections : []) {

@@ -426,19 +426,19 @@ const VOCAB_FIELDS = [
   {
     field: 'science & research',
     phrases: [
-      [/wet lab|cell culture|\bpcr\b|\bassays?\b/g, 'lab'],
+      [/wet lab|cell culture|\bpcr\b|\bassays?\b|lab(?:oratory)? (?:techniques|skills|experience|equipment|safety|procedures)/g, 'labtechniques'],
       [/peer[\s-]reviewed|first[\s-]author/g, 'publications'],
       [/grant (?:writing|proposals?)/g, 'grants writing'],
       [/clinical (?:trials?|research)/g, 'clinicalresearch research'],
     ],
     synonyms: {
-      laboratory: ['lab'], lab: ['lab'], experiment: ['research'], publication: ['publications'], published: ['publications'],
+      experiment: ['research'], publication: ['publications'], published: ['publications'],
       manuscript: ['publications', 'writing'], grant: ['grants'], irb: ['research'], chemistry: ['science'], biology: ['science'],
       physics: ['science'], survey: ['research'], interview: ['research', 'stakeholder'], fieldwork: ['research'], observation: ['research'],
       research: ['research'],
     },
-    tools: 'lab',
-    labels: { lab: 'lab techniques', clinicalresearch: 'clinical research', irb: 'IRB' },
+    tools: 'labtechniques',
+    labels: { labtechniques: 'lab techniques', clinicalresearch: 'clinical research', irb: 'IRB' },
   },
   {
     field: 'office & admin',

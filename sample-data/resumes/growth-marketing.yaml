@@ -11,13 +11,13 @@ sections:
       - block: summary-growth
   - title: Experience
     items:
-      - block: experience-brightline
+      - block: experience-software-company
         hide:
           - Planned a three-city customer event series with sales that sourced $1.2M in pipeline
-      - block: experience-fieldhouse
+      - block: experience-marketing-agency
         hide:
           - Organized photo and video shoots with outside vendors, keeping every shoot on budget
-      - block: experience-riverbend
+      - block: experience-bookstore
   - title: Education
     items:
       - block: education-state-university
@@ -29,3 +29,4 @@ sections:
     items:
       - block: certification-google-ads
       - block: award-presidents-club
+sample: true

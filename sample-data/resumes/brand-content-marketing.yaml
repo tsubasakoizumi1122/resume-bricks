@@ -11,11 +11,11 @@ sections:
       - block: summary-brand
   - title: Experience
     items:
-      - block: experience-brightline
+      - block: experience-software-company
         hide:
           - Own a **$600K** annual paid budget across Google Ads, LinkedIn, and Meta; cut cost per qualified lead by 28% in one year
           - Ran 40+ A/B tests on landing pages and ads, and set up the shared test log the whole team now uses
-      - block: experience-fieldhouse
+      - block: experience-marketing-agency
   - title: Projects
     items:
       - block: project-newsletter
@@ -30,3 +30,4 @@ sections:
   - title: Certifications
     items:
       - block: certification-hubspot-content
+sample: true

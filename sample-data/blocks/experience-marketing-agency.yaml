@@ -1,8 +1,8 @@
 type: experience
 tags: [agency, social, content, brand]
 role: Marketing Associate
-org: Fieldhouse Creative (fictional)
-location: Austin, TX
+org: Marketing Agency
+location: City, ST
 start: 2021-06
 end: 2023-03
 bullets:
@@ -10,3 +10,4 @@ bullets:
   - Wrote campaign briefs and ad copy; a spring campaign for a local restaurant group raised reservations 35%
   - Built monthly performance reports in Google Analytics and Looker Studio for client reviews
   - Organized photo and video shoots with outside vendors, keeping every shoot on budget
+sample: true

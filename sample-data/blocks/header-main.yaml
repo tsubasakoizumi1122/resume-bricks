@@ -1,10 +1,11 @@
 type: header
-name: Casey Morgan
-email: casey.morgan@example.com
-phone: (555) 010-3579
-location: Austin, TX
+name: Your Name
+email: name@example.com
+phone: (555) 555-0100
+location: City, ST
 links:
-  - label: linkedin.com/in/casey-morgan-example
-    url: https://www.linkedin.com/in/casey-morgan-example
+  - label: LinkedIn
+    url: https://example.com
   - label: Portfolio
     url: https://example.com
+sample: true

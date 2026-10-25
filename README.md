@@ -8,7 +8,7 @@
 
 Write each job, project, degree, and skill group once. For each role you apply to, drag the right bricks into a layout, choose which bullets to show, and export a clean PDF. Everything runs on your own machine and is saved as plain YAML files you can read, edit, and version with Git.
 
-**[▶ Try the demo in your browser](https://tsubasakoizumi1122.github.io/resume-bricks/demo.html)** (sample data, nothing is saved) · [日本語はこちら ↓](#日本語)
+**[▶ Use it in your browser](https://tsubasakoizumi1122.github.io/resume-bricks/app/)** (no install; your data stays in your browser) · [日本語はこちら ↓](#日本語)
 
 ![Resume Bricks screenshot](docs/screenshot.png)
 
@@ -38,7 +38,15 @@ Two resumes built from the **same** bricks of a fictional marketer (`sample-data
 
 Click an image for the PDF. Both open in the app on first run, so you can see exactly how they're put together.
 
-## Quick start
+## Use it in your browser
+
+Open **<https://tsubasakoizumi1122.github.io/resume-bricks/app/>**. It's the same app, with nothing to install:
+
+- Your bricks and resumes are saved **in that browser** (IndexedDB). PDF, Word and PowerPoint files are read in the browser too. Nothing is uploaded.
+- Because the data lives in one browser, use **Download backup** at the top of the library now and then. The backup is a `.zip` laid out like `my-data/`, so **Restore** brings it back, and you can also unzip it into `my-data/` to switch to the local app.
+- Clearing your browser's site data erases it, and it does not sync between browsers or devices. The local app below keeps everything as plain YAML files instead.
+
+## Quick start (local app)
 
 Requires [Node.js](https://nodejs.org/) 18.17 or newer.
 
@@ -50,6 +58,8 @@ npm start
 ```
 
 On a Mac you can also double-click `start-mac.command` instead of the last two commands.
+
+Just want to look around? `npm run demo` (or double-click `start-demo-mac.command`) opens the app on a throwaway copy of the fictional sample data at <http://localhost:4322>. Your `my-data/` is never touched and nothing is kept.
 
 Your browser opens at <http://localhost:4321>. On first run, a fictional sample person is copied into `my-data/` so you have something to play with. Replace it with your own bricks whenever you're ready.
 
@@ -79,7 +89,7 @@ Your browser opens at <http://localhost:4321>. On first run, a fictional sample 
 ```
 my-data/                 ← git-ignored: your personal data never gets committed
   blocks/                ← one YAML file per brick
-    experience-brightline.yaml
+    experience-software-company.yaml
   resumes/               ← one YAML file per resume layout
     growth-marketing.yaml
   .trash/
@@ -92,8 +102,8 @@ A brick is just YAML, so hand-editing works too (click a filter chip or reload t
 type: experience
 tags: [saas, growth, paid]
 role: Marketing Manager
-org: Brightline Software
-location: Austin, TX
+org: Software Company
+location: City, ST
 start: 2023-04        # YYYY-MM, or any text like "Summer 2025"
 end: present
 bullets:
@@ -129,7 +139,8 @@ RESUME_DATA=~/Dropbox/career-bricks npm start
 ```bash
 npm run dev            # restarts on file changes
 npm test               # node:test, no extra dependencies
-npm run build:demo     # docs/demo.html: single-file demo with sample data (served by GitHub Pages)
+npm run build:web      # docs/app/: the browser version (served by GitHub Pages)
+npm run build:demo     # docs/demo.html: single-file demo with sample data, nothing saved
 npm run build:samples  # docs/samples/*.pdf, *.png: the sample resumes above (needs Google Chrome)
 ```
 
@@ -167,9 +178,9 @@ Issues and pull requests are welcome. By sending a pull request, you agree that 
 For commercial use, [open an issue](https://github.com/tsubasakoizumi1122/resume-bricks/issues) to ask about a license.
 
 
-- **Dependencies** are installed by npm and keep their own licenses: [`yaml`](https://github.com/eemeli/yaml) (ISC), [`unpdf`](https://github.com/unjs/unpdf) (MIT), [`mammoth`](https://github.com/mwilliamson/mammoth.js) (BSD-2-Clause) and [`jszip`](https://github.com/Stuk/jszip) (MIT, dual-licensed with GPL-3.0). None of their code is copied into this repository.
+- **Dependencies** are installed by npm and keep their own licenses: [`yaml`](https://github.com/eemeli/yaml) (ISC), [`unpdf`](https://github.com/unjs/unpdf) (MIT), [`mammoth`](https://github.com/mwilliamson/mammoth.js) (BSD-2-Clause) and [`jszip`](https://github.com/Stuk/jszip) (MIT, dual-licensed with GPL-3.0). The browser version in `docs/app/` bundles them (and Mozilla's pdf.js, Apache-2.0, which comes with `unpdf`); their license texts are in [`docs/app/THIRD-PARTY-LICENSES.txt`](docs/app/THIRD-PARTY-LICENSES.txt).
 - **Your resumes are yours.** The license covers the app, not what you make with it. Your bricks stay in `my-data/` and are never part of the repository.
-- **Sample data is fictional.** Casey Morgan and every company, school and number in `sample-data/` and `docs/samples/` are made up; any resemblance to real people or businesses is a coincidence.
+- **Sample data is fictional.** "Your Name" and every company, school and number in `sample-data/` and `docs/samples/` are made up; any resemblance to real people or businesses is a coincidence.
 - **Trademarks.** Product names used in the sample data and the job vocabulary (Google Ads, HubSpot, Salesforce, Claude and others) belong to their owners. This project is not affiliated with or endorsed by any of them.
 
 ---
@@ -180,7 +191,7 @@ For commercial use, [open an issue](https://github.com/tsubasakoizumi1122/resume
 
 職歴・プロジェクト・学歴・スキルを一度ずつ書いておけば、応募先に合わせてドラッグ&ドロップで並べ替え、見せる箇条書きを選び、PDFで出力できます。すべて自分のPCで動き、データは読みやすいYAMLファイルで保存されます。アカウント登録もAPIキーも不要です。
 
-**[▶ ブラウザでデモを試す](https://tsubasakoizumi1122.github.io/resume-bricks/demo.html)**（サンプルデータ入り・保存はされません）
+**[▶ ブラウザで使う](https://tsubasakoizumi1122.github.io/resume-bricks/app/)**（インストール不要・データはブラウザ内に保存）
 
 ### レジュメの見本
 
@@ -193,7 +204,15 @@ For commercial use, [open an issue](https://github.com/tsubasakoizumi1122/resume
 
 画像をクリックするとPDFが開きます。どちらも初回起動時にアプリに入っているので、どう組み立てたかをそのまま確認できます。
 
-### 始め方
+### ブラウザで使う
+
+**<https://tsubasakoizumi1122.github.io/resume-bricks/app/>** を開くだけで、同じアプリがそのまま使えます。
+
+- ブロックとレジュメは**そのブラウザの中**（IndexedDB）に保存されます。PDF・Word・PowerPoint の読み込みもブラウザ内で行い、何もアップロードされません
+- データはそのブラウザにしかないので、ライブラリ上部の **Download backup** で時々バックアップしてください。`my-data/` と同じ構成の `.zip` なので、**Restore** で戻せるほか、`my-data/` に展開すればローカル版にも移せます
+- ブラウザのサイトデータを消すと消えます。別のブラウザや端末とは同期されません。YAML ファイルで管理したい場合は下のローカル版を使ってください
+
+### 始め方（ローカル版）
 
 Node.js 18.17以上が必要です。
 
@@ -205,6 +224,8 @@ npm start
 ```
 
 ブラウザで <http://localhost:4321> が開きます。Macなら `start-mac.command` をダブルクリックでも起動できます。初回は架空人物のサンプルが `my-data/` に入るので、触りながら自分のブロックに置き換えていけます。
+
+お試しだけなら `npm run demo`（Macは `start-demo-mac.command` をダブルクリック）で、架空のサンプルデータの使い捨てコピーで <http://localhost:4322> が開きます。`my-data/` には一切触れず、何も保存されません。
 
 ### 画面
 
@@ -245,7 +266,7 @@ npm start
 商用利用をご希望の場合は、[Issue](https://github.com/tsubasakoizumi1122/resume-bricks/issues) でご相談ください。
 
 
-- 依存ライブラリ（yaml / unpdf / mammoth / jszip）はnpmでインストールされ、それぞれのライセンス（ISC・MIT・BSD）に従います。このリポジトリにはコードを同梱していません
+- 依存ライブラリ（yaml / unpdf / mammoth / jszip）はnpmでインストールされ、それぞれのライセンス（ISC・MIT・BSD）に従います。ブラウザ版（`docs/app/`）にはこれらと、`unpdf` に含まれる Mozilla の pdf.js（Apache-2.0）を同梱しています。各ライセンス文は [`docs/app/THIRD-PARTY-LICENSES.txt`](docs/app/THIRD-PARTY-LICENSES.txt) にあります
 - このアプリで作ったレジュメはあなたのものです。ライセンスの対象はアプリ本体だけです
 - サンプルの人物・会社・学校・数字はすべて架空です
 - サンプルや用語リストに出てくる製品名（Google Ads、HubSpot、Salesforce、Claude など）は各社の商標です。本プロジェクトはそれらの企業とは関係ありません

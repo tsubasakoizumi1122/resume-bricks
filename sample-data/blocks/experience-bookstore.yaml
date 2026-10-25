@@ -1,10 +1,11 @@
 type: experience
 tags: [email, events]
 role: Marketing Intern
-org: Riverbend Books (fictional)
-location: Austin, TX
+org: Bookstore
+location: City, ST
 start: 2020-06
 end: 2020-12
 bullets:
   - Grew the store newsletter from 1,200 to 4,000 subscribers with a weekly staff-picks format
   - Planned author events that regularly drew 80+ guests
+sample: true

@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { exec } from 'node:child_process';
 import { createStore, initDataDir } from './lib/store.js';
+import { idHint } from './lib/ids.js';
 import { fileToText } from './lib/extract.js';
 import { githubToText, folderToText } from './lib/sources.js';
 
@@ -80,12 +81,6 @@ function isLocalRequest(req) {
     }
   }
   return true;
-}
-
-function idHint(kind, body) {
-  if (kind === 'resumes') return body.name || 'resume';
-  const label = body.title || body.org || body.name || body.school || body.label || body.heading || '';
-  return `${body.type || 'brick'}-${label}`;
 }
 
 async function handleApi(req, res, pathname) {
