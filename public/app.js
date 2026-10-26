@@ -4,7 +4,7 @@ import { parseResume } from './importer.js';
 import { buildWorkPrompt, parseClaudeReply } from './work.js';
 import { remapResume } from './hide.js';
 import { startTour } from './tour.js';
-import { tailorResume, trimOnce, buildTailorPrompt, applyTailorReply, termLabel, ownBricks } from './tailor.js';
+import { tailorResume, trimOnce, hiddenByScore, buildTailorPrompt, applyTailorReply, termLabel, ownBricks } from './tailor.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -1340,8 +1340,11 @@ function presentDrafts(parsed, { raw = null, mode = 'resume', notes = [] } = {})
   warn.innerHTML = notes.length
     ? `<li><b>Claude has questions.</b> Answer them in Claude and paste the new reply, or fix the bricks after importing.</li>${notes.map((q) => `<li>${esc(q)}</li>`).join('')}`
     : parsed.warnings.map((w) => `<li>${esc(w)}</li>`).join('');
-  const base = imp.fileName.replace(/\.[^.]+$/, '') || 'Imported resume';
-  if (!$('#imp-resume-name').value || $('#imp-step2').hidden) $('#imp-resume-name').value = `${base} (imported)`;
+  // Name the new resume after the person when the header has a name, else after the file.
+  const person = String(parsed.header?.name || '').trim();
+  const fromFile = (imp.fileName || '').replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
+  const base = person || fromFile || 'Imported resume';
+  if (!$('#imp-resume-name').value || $('#imp-step2').hidden) $('#imp-resume-name').value = base;
   renderDrafts();
   $('#imp-step1').hidden = true;
   $('#imp-step2').hidden = false;
@@ -1736,7 +1739,7 @@ async function startWithOwn() {
   const resumes = sampleResumes();
   const own = state.blocks.some((b) => !b.sample && b.type !== '_error');
   const yes = await ask({
-    title: own ? 'Remove the sample data?' : 'Start with your own career?',
+    title: own ? 'Remove the sample data?' : 'Start with your own experience?',
     message:
       `${bricks.length} sample brick${bricks.length === 1 ? '' : 's'} and ${resumes.length} sample resume${resumes.length === 1 ? '' : 's'} ` +
       `move to ${host.trashNote ? 'the trash' : 'my-data/.trash'}. Your own bricks are not touched.`,
@@ -1781,8 +1784,9 @@ function setTailorStage() {
 
 function tailorDefaultName(job) {
   const first = String(job || '').split('\n').map((l) => l.trim()).find((l) => l.length > 2) || '';
-  const short = first.length > 48 ? `${first.slice(0, 48).replace(/\s+\S*$/, '')}…` : first;
-  return short ? `${short} (tailored)` : 'Tailored resume';
+  // "Development Analyst - Pacific Urban Partners" stays readable; very long first lines are cut at a word.
+  const short = first.length > 44 ? `${first.slice(0, 44).replace(/\s+\S*$/, '')}…` : first;
+  return short || 'Tailored resume';
 }
 
 function openTailor() {
@@ -1804,6 +1808,23 @@ function fitToOnePage(scores) {
     renderPreview();
   }
   return steps;
+}
+
+/** Then use the room that is left: show hidden bullets again, best match first, while it stays on one page. */
+function fillOnePage(scores) {
+  let added = 0;
+  for (const { item, text } of hiddenByScore(state.comp, scores)) {
+    if (state.pages > 1.001) break;
+    const before = item.hide;
+    item.hide = before.filter((h) => h !== text);
+    if (!item.hide.length) delete item.hide;
+    renderPreview();
+    if (state.pages > 1.001) {
+      item.hide = before; // did not fit: put it back and try a shorter one
+      renderPreview();
+    } else added++;
+  }
+  return added;
 }
 
 function renderTailorReport(extra = {}) {
@@ -1841,8 +1862,10 @@ async function runTailor() {
   tailor.report = report;
   setDirty(true);
   renderAll();
-  const trimmed = $('#tailor-fit').checked ? fitToOnePage(report.scores) : 0;
-  if (trimmed) renderAll();
+  const fit = $('#tailor-fit').checked;
+  const trimmed = fit ? fitToOnePage(report.scores) : 0;
+  const filled = fit ? fillOnePage(report.scores) : 0;
+  if (trimmed || filled) renderAll();
   tailor.builtFor = jobText;
   renderTailorReport();
   setTailorStage();

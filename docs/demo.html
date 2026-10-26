@@ -662,6 +662,12 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
 @media (prefers-reduced-motion: reduce) { .tour-spot, .tour-pop { transition: none; } }
 @media print { .tour, .tour-btn { display: none !important; } }
 
+/* section titles may shrink on narrow screens so the × stays inside the card */
+.sec-head input { min-width: 0; width: 100%; }
+/* the resume name grows with its text (where supported) instead of cutting it off */
+#resume-name { field-sizing: content; width: auto; min-width: 160px; max-width: 360px; }
+@media (max-width: 700px) { #resume-name { max-width: none; } }
+
 </style>
   <style id="page-style"></style>
 <style>.demo-banner{background:rgba(108,92,231,.12);color:inherit;font-size:12px;padding:6px 20px;border-bottom:1px solid rgba(108,92,231,.2)}.demo-banner code{background:rgba(255,255,255,.35);padding:0 4px;border-radius:4px}@media print{.demo-banner{display:none}}</style>
@@ -2566,6 +2572,14 @@ const GAP_VOCAB = new Set(
 
 const TERM_LABELS = Object.assign({}, ...VOCAB_FIELDS.map((f) => f.labels || {}));
 
+/** Concepts that are real skills, tools, credentials or fields (not everyday words): shown first as matches. */
+const KNOWN_TERMS = new Set([
+  ...GAP_VOCAB,
+  ...Object.keys(TERM_LABELS),
+  ...Object.values(SYNONYMS).flat(),
+  ...PHRASES.flatMap(([, rep]) => rep.split(' ')),
+]);
+
 // "Tailor to a job": score bricks against a job post and assemble a resume from them.
 // Pure functions (no DOM), shared by the browser and the tests. Nothing here writes new text:
 // it only chooses bricks, orders them and picks which existing bullets to show.
@@ -2691,9 +2705,49 @@ function analyzeJob(jobText, bricks) {
 
   const covered = new Set(docs.flatMap((d) => [...d]));
   const keyTerms = [...weights.entries()].sort((a, b) => b[1] - a[1]);
-  const matched = keyTerms.filter(([c]) => covered.has(c)).slice(0, 14).map(([c]) => c);
-  const missing = keyTerms.filter(([c]) => GAP_VOCAB.has(c) && !covered.has(c)).map(([c]) => c);
+  // Show real skills, tools and fields first; plain words only fill in when there are few.
+  const hits = keyTerms.filter(([c]) => covered.has(c)).map(([c]) => c);
+  const known = hits.filter((c) => KNOWN_TERMS.has(c));
+  const matched = (known.length >= 6 ? known : [...known, ...hits.filter((c) => !KNOWN_TERMS.has(c))]).slice(0, 10);
+  const alternatives = orGroups(jobText);
+  const missing = keyTerms
+    .filter(([c]) => GAP_VOCAB.has(c) && !covered.has(c))
+    .map(([c]) => c)
+    // "Spanish or Japanese": having one of the options is enough.
+    .filter((c) => !alternatives.some((g) => g.some((part) => part.has(c)) && g.some((part) => !part.has(c) && [...part].some((x) => GAP_VOCAB.has(x) && covered.has(x)))));
   return { weights, scored, matched, missing, surface };
+}
+
+/**
+ * Short "A or B" / "A/B" alternatives in a job post, as lists of concept sets per option.
+ * "Spanish or Japanese a plus" -> [[{spanish, bilingual}, {japanese, bilingual}]].
+ */
+function orGroups(jobText) {
+  const groups = [];
+  for (const clause of String(jobText || '').split(/[.;:\n•]+/)) {
+    if (!/\bor\b|\//i.test(clause)) continue;
+    const parts = clause.split(/\band\/or\b|\bor\b|\/|,/i).map((x) => x.trim()).filter(Boolean);
+    if (parts.length < 2 || parts.some((x) => x.split(/\s+/).length > 6)) continue;
+    groups.push(parts.map((x) => new Set(concepts(x))));
+  }
+  return groups;
+}
+
+/** Hidden bullets of a layout, best match first: candidates to show again when there is room. */
+function hiddenByScore(comp, scores) {
+  const out = [];
+  for (const sec of comp.sections) {
+    for (const it of sec.items) {
+      const s = scores.get(it.block);
+      if (!s || !it.hide?.length) continue;
+      const all = (s.brick.bullets || []).map(String);
+      for (const text of it.hide) {
+        const i = all.indexOf(text);
+        if (i >= 0) out.push({ item: it, text, score: s.bullets[i] ?? 0, index: i });
+      }
+    }
+  }
+  return out.sort((a, b) => b.score - a.score || a.index - b.index);
 }
 
 // ---------------------------------------------------------------- assembling
@@ -4277,8 +4331,11 @@ function presentDrafts(parsed, { raw = null, mode = 'resume', notes = [] } = {})
   warn.innerHTML = notes.length
     ? `<li><b>Claude has questions.</b> Answer them in Claude and paste the new reply, or fix the bricks after importing.</li>${notes.map((q) => `<li>${esc(q)}</li>`).join('')}`
     : parsed.warnings.map((w) => `<li>${esc(w)}</li>`).join('');
-  const base = imp.fileName.replace(/\.[^.]+$/, '') || 'Imported resume';
-  if (!$('#imp-resume-name').value || $('#imp-step2').hidden) $('#imp-resume-name').value = `${base} (imported)`;
+  // Name the new resume after the person when the header has a name, else after the file.
+  const person = String(parsed.header?.name || '').trim();
+  const fromFile = (imp.fileName || '').replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
+  const base = person || fromFile || 'Imported resume';
+  if (!$('#imp-resume-name').value || $('#imp-step2').hidden) $('#imp-resume-name').value = base;
   renderDrafts();
   $('#imp-step1').hidden = true;
   $('#imp-step2').hidden = false;
@@ -4673,7 +4730,7 @@ async function startWithOwn() {
   const resumes = sampleResumes();
   const own = state.blocks.some((b) => !b.sample && b.type !== '_error');
   const yes = await ask({
-    title: own ? 'Remove the sample data?' : 'Start with your own career?',
+    title: own ? 'Remove the sample data?' : 'Start with your own experience?',
     message:
       `${bricks.length} sample brick${bricks.length === 1 ? '' : 's'} and ${resumes.length} sample resume${resumes.length === 1 ? '' : 's'} ` +
       `move to ${host.trashNote ? 'the trash' : 'my-data/.trash'}. Your own bricks are not touched.`,
@@ -4718,8 +4775,9 @@ function setTailorStage() {
 
 function tailorDefaultName(job) {
   const first = String(job || '').split('\n').map((l) => l.trim()).find((l) => l.length > 2) || '';
-  const short = first.length > 48 ? `${first.slice(0, 48).replace(/\s+\S*$/, '')}…` : first;
-  return short ? `${short} (tailored)` : 'Tailored resume';
+  // "Development Analyst - Pacific Urban Partners" stays readable; very long first lines are cut at a word.
+  const short = first.length > 44 ? `${first.slice(0, 44).replace(/\s+\S*$/, '')}…` : first;
+  return short || 'Tailored resume';
 }
 
 function openTailor() {
@@ -4741,6 +4799,23 @@ function fitToOnePage(scores) {
     renderPreview();
   }
   return steps;
+}
+
+/** Then use the room that is left: show hidden bullets again, best match first, while it stays on one page. */
+function fillOnePage(scores) {
+  let added = 0;
+  for (const { item, text } of hiddenByScore(state.comp, scores)) {
+    if (state.pages > 1.001) break;
+    const before = item.hide;
+    item.hide = before.filter((h) => h !== text);
+    if (!item.hide.length) delete item.hide;
+    renderPreview();
+    if (state.pages > 1.001) {
+      item.hide = before; // did not fit: put it back and try a shorter one
+      renderPreview();
+    } else added++;
+  }
+  return added;
 }
 
 function renderTailorReport(extra = {}) {
@@ -4778,8 +4853,10 @@ async function runTailor() {
   tailor.report = report;
   setDirty(true);
   renderAll();
-  const trimmed = $('#tailor-fit').checked ? fitToOnePage(report.scores) : 0;
-  if (trimmed) renderAll();
+  const fit = $('#tailor-fit').checked;
+  const trimmed = fit ? fitToOnePage(report.scores) : 0;
+  const filled = fit ? fillOnePage(report.scores) : 0;
+  if (trimmed || filled) renderAll();
   tailor.builtFor = jobText;
   renderTailorReport();
   setTailorStage();

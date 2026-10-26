@@ -3,7 +3,7 @@
 // it only chooses bricks, orders them and picks which existing bullets to show.
 import { TYPES, blockLabel } from './schema.js';
 import { extractJson } from './work.js';
-import { PHRASES, SYNONYMS, GAP_VOCAB, TERM_LABELS } from './vocab.js';
+import { PHRASES, SYNONYMS, GAP_VOCAB, TERM_LABELS, KNOWN_TERMS } from './vocab.js';
 
 // ---------------------------------------------------------------- text -> concepts
 
@@ -123,9 +123,49 @@ export function analyzeJob(jobText, bricks) {
 
   const covered = new Set(docs.flatMap((d) => [...d]));
   const keyTerms = [...weights.entries()].sort((a, b) => b[1] - a[1]);
-  const matched = keyTerms.filter(([c]) => covered.has(c)).slice(0, 14).map(([c]) => c);
-  const missing = keyTerms.filter(([c]) => GAP_VOCAB.has(c) && !covered.has(c)).map(([c]) => c);
+  // Show real skills, tools and fields first; plain words only fill in when there are few.
+  const hits = keyTerms.filter(([c]) => covered.has(c)).map(([c]) => c);
+  const known = hits.filter((c) => KNOWN_TERMS.has(c));
+  const matched = (known.length >= 6 ? known : [...known, ...hits.filter((c) => !KNOWN_TERMS.has(c))]).slice(0, 10);
+  const alternatives = orGroups(jobText);
+  const missing = keyTerms
+    .filter(([c]) => GAP_VOCAB.has(c) && !covered.has(c))
+    .map(([c]) => c)
+    // "Spanish or Japanese": having one of the options is enough.
+    .filter((c) => !alternatives.some((g) => g.some((part) => part.has(c)) && g.some((part) => !part.has(c) && [...part].some((x) => GAP_VOCAB.has(x) && covered.has(x)))));
   return { weights, scored, matched, missing, surface };
+}
+
+/**
+ * Short "A or B" / "A/B" alternatives in a job post, as lists of concept sets per option.
+ * "Spanish or Japanese a plus" -> [[{spanish, bilingual}, {japanese, bilingual}]].
+ */
+export function orGroups(jobText) {
+  const groups = [];
+  for (const clause of String(jobText || '').split(/[.;:\n•]+/)) {
+    if (!/\bor\b|\//i.test(clause)) continue;
+    const parts = clause.split(/\band\/or\b|\bor\b|\/|,/i).map((x) => x.trim()).filter(Boolean);
+    if (parts.length < 2 || parts.some((x) => x.split(/\s+/).length > 6)) continue;
+    groups.push(parts.map((x) => new Set(concepts(x))));
+  }
+  return groups;
+}
+
+/** Hidden bullets of a layout, best match first: candidates to show again when there is room. */
+export function hiddenByScore(comp, scores) {
+  const out = [];
+  for (const sec of comp.sections) {
+    for (const it of sec.items) {
+      const s = scores.get(it.block);
+      if (!s || !it.hide?.length) continue;
+      const all = (s.brick.bullets || []).map(String);
+      for (const text of it.hide) {
+        const i = all.indexOf(text);
+        if (i >= 0) out.push({ item: it, text, score: s.bullets[i] ?? 0, index: i });
+      }
+    }
+  }
+  return out.sort((a, b) => b.score - a.score || a.index - b.index);
 }
 
 // ---------------------------------------------------------------- assembling

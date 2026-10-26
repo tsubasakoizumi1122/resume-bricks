@@ -23,7 +23,9 @@ export async function exportBackup(db) {
     'Resume Bricks backup.\n\nRestore it in the web app with Restore, or unzip it into my-data/ to use it with the local app (npm start).\n',
   );
   const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-  const name = `resume-bricks-backup-${new Date().toISOString().slice(0, 10)}.zip`;
+  const d = new Date(); // local date, so an evening backup is not named after tomorrow
+  const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const name = `resume-bricks-backup-${day}.zip`;
   return { blob, name, counts };
 }
 

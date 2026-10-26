@@ -523,3 +523,11 @@ export const GAP_VOCAB = new Set(
 );
 
 export const TERM_LABELS = Object.assign({}, ...VOCAB_FIELDS.map((f) => f.labels || {}));
+
+/** Concepts that are real skills, tools, credentials or fields (not everyday words): shown first as matches. */
+export const KNOWN_TERMS = new Set([
+  ...GAP_VOCAB,
+  ...Object.keys(TERM_LABELS),
+  ...Object.values(SYNONYMS).flat(),
+  ...PHRASES.flatMap(([, rep]) => rep.split(' ')),
+]);

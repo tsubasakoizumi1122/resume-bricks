@@ -288,3 +288,9 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
 .tour-skip { font-size: 12.5px; color: var(--muted); padding-left: 0 !important; }
 @media (prefers-reduced-motion: reduce) { .tour-spot, .tour-pop { transition: none; } }
 @media print { .tour, .tour-btn { display: none !important; } }
+
+/* section titles may shrink on narrow screens so the × stays inside the card */
+.sec-head input { min-width: 0; width: 100%; }
+/* the resume name grows with its text (where supported) instead of cutting it off */
+#resume-name { field-sizing: content; width: auto; min-width: 160px; max-width: 360px; }
+@media (max-width: 700px) { #resume-name { max-width: none; } }

@@ -127,7 +127,7 @@ test('marketing terms are recognized, and missing tools are flagged', () => {
   ];
   const a = analyzeJob('Growth marketer for PPC, social ads, split testing and email marketing. Marketo or HubSpot. Google Analytics required.', mk);
   for (const c of ['paidsearch', 'paidsocial', 'abtest', 'email', 'hubspot']) assert.ok(a.matched.includes(c), c);
-  assert.ok(a.missing.includes('marketo'));
+  assert.ok(!a.missing.includes('marketo'), '"Marketo or HubSpot": HubSpot is enough');
   assert.ok(a.missing.includes('googleanalytics'));
   assert.ok(a.scored.find((s) => s.id === 'exp-mk').score > a.scored.find((s) => s.id === 'exp-shop').score);
 });
