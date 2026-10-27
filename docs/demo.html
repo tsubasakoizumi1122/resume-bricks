@@ -678,6 +678,10 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
    printed page, or a resume that fits one page in the preview spills onto a second one. */
 @media print {
   .workspace, .pane, .preview-pane, .paper-wrap { padding: 0 !important; margin: 0 !important; gap: 0 !important; border: 0 !important; }
+  /* No clipping either: a rounded, scrolling pane would cut the corners off the last printed line. */
+  .workspace, .pane, .preview-pane, .paper-wrap, #page { overflow: visible !important; border-radius: 0 !important; height: auto !important; max-height: none !important; }
+  /* Only the resume prints: no app backgrounds even with "Background graphics" on. */
+  html, body, .workspace, .pane, .preview-pane, .paper-wrap { background: #fff !important; background-image: none !important; }
   .preview-pane { display: block !important; }
   #page { margin: 0 !important; }
 }
