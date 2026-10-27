@@ -10,9 +10,13 @@ Write each job, project, degree, and skill group once. For each role you apply t
 
 **[▶ Use it in your browser](https://tsubasakoizumi1122.github.io/resume-bricks/app/)** (no install; your data stays in your browser) · [日本語はこちら ↓](#日本語)
 
-![Resume Bricks screenshot](docs/screenshot.png)
+![Tailoring a resume to a job post, choosing bullets, and saving in Resume Bricks](docs/demo.gif)
 
-<details><summary>Night mode</summary>
+*Paste a job post, get a one-page draft built only from your own bricks, then fine-tune which bullets show.*
+
+<details><summary>Screenshots (light and night mode)</summary>
+
+![Resume Bricks screenshot](docs/screenshot.png)
 
 ![Resume Bricks in night mode](docs/screenshot-dark.png)
 
@@ -194,6 +198,8 @@ For commercial use, [open an issue](https://github.com/tsubasakoizumi1122/resume
 職歴・プロジェクト・学歴・スキルを一度ずつ書いておけば、応募先に合わせてドラッグ&ドロップで並べ替え、見せる箇条書きを選び、PDFで出力できます。すべて自分のPCで動き、データは読みやすいYAMLファイルで保存されます。アカウント登録もAPIキーも不要です。
 
 **[▶ ブラウザで使う](https://tsubasakoizumi1122.github.io/resume-bricks/app/)**（インストール不要・データはブラウザ内に保存）
+
+![求人に合わせてレジュメを組み立て、箇条書きを選んで保存する様子](docs/demo.gif)
 
 ### レジュメの見本
 
