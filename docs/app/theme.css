@@ -217,6 +217,12 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
 .brick.sample { opacity: 0.82; }
 
 /* web version: where your data lives, and backups */
+.quick-start { display: flex; flex-direction: column; gap: 6px; padding: 12px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 12px; }
+.quick-start[hidden] { display: none; }
+.quick-start button { text-align: left; }
+.quick-start small { color: var(--muted); line-height: 1.4; }
+@media print { .quick-start { display: none !important; } }
+
 .storage-note {
   display: flex; flex-direction: column; gap: 6px; margin-top: 6px; padding: 10px 12px; border-radius: 12px;
   font-size: 12px; line-height: 1.4; color: var(--muted); background: var(--chip); border: 1px solid var(--line);
@@ -239,7 +245,7 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
 
 /* narrow screens: Library / Layout / Preview tabs instead of one very long page */
 .pane-tabs { display: none; }
-@media (max-width: 1000px) {
+@media screen and (max-width: 1000px) {
   .pane-tabs {
     display: flex; gap: 4px; position: sticky; top: 0; z-index: 30; margin: 0 12px; padding: 4px; border-radius: 12px;
     background: var(--topbar); border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);

@@ -144,6 +144,7 @@ function nudgeTab(name) {
 }
 
 function bindPaneTabs() {
+  $$('[data-start]').forEach((button) => button.addEventListener('click', () => $(`#${button.dataset.start}`).click()));
   let pane = 'library';
   try { pane = localStorage.getItem('resume-bricks:pane') || pane; } catch { /* ignore */ }
   showPane(pane, { scroll: false });
@@ -1724,6 +1725,7 @@ function renderSampleBanner() {
   const el = $('#sample-banner');
   if (!el) return;
   const n = sampleBricks().length;
+  $('#quick-start').hidden = !n;
   const own = state.blocks.filter((b) => !b.sample && b.type !== '_error').length;
   el.hidden = !n;
   if (!n) return;

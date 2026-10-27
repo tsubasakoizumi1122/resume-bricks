@@ -590,6 +590,12 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
 .brick.sample { opacity: 0.82; }
 
 /* web version: where your data lives, and backups */
+.quick-start { display: flex; flex-direction: column; gap: 6px; padding: 12px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 12px; }
+.quick-start[hidden] { display: none; }
+.quick-start button { text-align: left; }
+.quick-start small { color: var(--muted); line-height: 1.4; }
+@media print { .quick-start { display: none !important; } }
+
 .storage-note {
   display: flex; flex-direction: column; gap: 6px; margin-top: 6px; padding: 10px 12px; border-radius: 12px;
   font-size: 12px; line-height: 1.4; color: var(--muted); background: var(--chip); border: 1px solid var(--line);
@@ -612,7 +618,7 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
 
 /* narrow screens: Library / Layout / Preview tabs instead of one very long page */
 .pane-tabs { display: none; }
-@media (max-width: 1000px) {
+@media screen and (max-width: 1000px) {
   .pane-tabs {
     display: flex; gap: 4px; position: sticky; top: 0; z-index: 30; margin: 0 12px; padding: 4px; border-radius: 12px;
     background: var(--topbar); border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -737,6 +743,13 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
         <span id="sample-banner-text"></span>
         <button id="btn-start-own" class="small primary" type="button">Start with my own</button>
       </div>
+      <nav id="quick-start" class="quick-start" aria-label="Get started" hidden>
+        <strong>Your first resume</strong>
+        <button type="button" data-start="btn-import">1. Import your experience</button>
+        <button type="button" data-start="btn-tailor">2. Tailor to a job</button>
+        <button type="button" data-start="btn-print">3. Save as PDF</button>
+        <small>Review your details in the preview before exporting.</small>
+      </nav>
       <input id="lib-search" type="search" placeholder="Search bricks or tags…" />
       <div id="lib-filters" class="chips"></div>
       <div id="lib-list" class="lib-list"></div>
@@ -3135,6 +3148,7 @@ function nudgeTab(name) {
 }
 
 function bindPaneTabs() {
+  $$('[data-start]').forEach((button) => button.addEventListener('click', () => $(`#${button.dataset.start}`).click()));
   let pane = 'library';
   try { pane = localStorage.getItem('resume-bricks:pane') || pane; } catch { /* ignore */ }
   showPane(pane, { scroll: false });
@@ -4715,6 +4729,7 @@ function renderSampleBanner() {
   const el = $('#sample-banner');
   if (!el) return;
   const n = sampleBricks().length;
+  $('#quick-start').hidden = !n;
   const own = state.blocks.filter((b) => !b.sample && b.type !== '_error').length;
   el.hidden = !n;
   if (!n) return;

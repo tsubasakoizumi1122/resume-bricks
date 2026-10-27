@@ -82,6 +82,7 @@ Your browser opens at <http://localhost:4321>. On first run, a fictional sample 
 - **Export.** **PDF / Print** opens the print dialog; choose "Save as PDF". **Export .md** downloads Markdown.
 - **Resume look.** Classic or Modern, US Letter or A4, accent color, and text size.
 - **Guided tour.** A quick tour opens the first time you visit. Replay it anytime with the **?** button at the top.
+- **Quick start.** While sample bricks are present, the library keeps three shortcuts visible: import your experience, tailor to a job, and save as PDF. Review your details in the preview before exporting.
 - **Night mode.** The sun / moon / Auto switch in the top bar. Auto follows your OS setting. PDFs always print on white.
 - **Nothing is ever hard-deleted.** Deleted bricks and resumes move to `my-data/.trash/`.
 
