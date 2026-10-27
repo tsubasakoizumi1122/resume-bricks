@@ -95,7 +95,7 @@ Summarized findings in a research brief
 Bike Network Proposal | Spring 2021
 Drafted a 10-year bike network plan
 EXPERIENCE & LEADERSHIP
-Northwind Media | Japan (Remote)
+Northwind Media | Oregon (Remote)
 Communications Intern | Feb 2021 – Aug 2021
 Wrote and edited articles for the company blog
 City Arena | Portland, OR
@@ -109,7 +109,15 @@ Managed crowd flow at sold-out events`);
   assert.equal(proj.blocks[0].bullets.length, 2, 'a short last bullet stays a bullet');
   assert.equal(proj.blocks[1].name, 'Bike Network Proposal');
   assert.deepEqual(exp.blocks.map(pick), [
-    { role: 'Communications Intern', org: 'Northwind Media', location: 'Japan (Remote)', start: '2021-02', end: '2021-08' },
+    { role: 'Communications Intern', org: 'Northwind Media', location: 'Oregon (Remote)', start: '2021-02', end: '2021-08' },
     { role: 'Event Staff', org: 'City Arena', location: 'Portland, OR', start: '2020-06', end: '2021-08' },
   ]);
+});
+
+test('a place with a work mode is a location, not part of the role', () => {
+  for (const loc of ['Oregon (Remote)', 'Canada (Hybrid)', 'New Zealand (On-site)', 'Japan (Remote)']) {
+    const r = parseResume(`A B\na@example.com\nEXPERIENCE\nNorthwind Media | ${loc}\nCommunications Intern | Feb 2021 – Aug 2021\nWrote articles`);
+    const b = r.sections[0].blocks[0];
+    assert.deepEqual([b.org, b.role, b.location], ['Northwind Media', 'Communications Intern', loc], loc);
+  }
 });
