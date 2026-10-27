@@ -37,3 +37,11 @@ test('hidden bullets are offered back best match first', () => {
   assert.equal(back.length, 1);
   assert.equal(back[0].text, exp.hide[0]);
 });
+
+test('resume names from job titles are cut at a natural break', async () => {
+  const { shortJobName } = await import('../public/tailor.js');
+  assert.equal(shortJobName('Investment Analyst, Asset Management - Harborview Capital'), 'Investment Analyst, Asset Management');
+  assert.equal(shortJobName('Development Analyst - Pacific Urban Partners'), 'Development Analyst - Pacific Urban Partners', 'short enough: kept');
+  assert.equal(shortJobName('Senior Associate Real Estate Development Acquisitions Underwriting'), 'Senior Associate Real Estate Development…');
+  assert.doesNotMatch(shortJobName('A very long title that just keeps going on and on - with more'), /[-,]…$|[-,]$/);
+});

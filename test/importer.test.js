@@ -121,3 +121,10 @@ test('a place with a work mode is a location, not part of the role', () => {
     assert.deepEqual([b.org, b.role, b.location], ['Northwind Media', 'Communications Intern', loc], loc);
   }
 });
+
+test('images and other binary files are refused instead of becoming bricks', async () => {
+  const { fileToText } = await import('../lib/extract.js');
+  const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, ...Array.from({ length: 400 }, (_, i) => i % 256)]);
+  await assert.rejects(fileToText(png, 'photo.png', 'image/png'), /not supported/);
+  assert.equal(await fileToText(new TextEncoder().encode('Jane Doe\nEXPERIENCE\nAnalyst | Acme'), 'resume.txt'), 'Jane Doe\nEXPERIENCE\nAnalyst | Acme');
+});

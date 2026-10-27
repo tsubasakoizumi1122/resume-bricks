@@ -312,3 +312,19 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
   .preview-pane { display: block !important; }
   #page { margin: 0 !important; }
 }
+
+/* phones: a compact top bar. Name and resume picker share a row; the buttons scroll sideways in one
+   row each instead of wrapping onto several lines, so the panes start higher up the screen.
+   (.brand + .group is the name row; the other groups hold buttons.) */
+@media screen and (max-width: 700px) {
+  .topbar { gap: 6px !important; padding: 8px 12px !important; }
+  .topbar > .brand + .group { flex-wrap: nowrap; width: 100%; }
+  .topbar > .brand + .group #resume-select { flex: 0 1 42%; min-width: 0; max-width: 42%; }
+  .topbar > .brand + .group #resume-name { flex: 1 1 0; min-width: 0; max-width: none; field-sizing: fixed; width: auto; }
+  .topbar > .group:not(.brand + .group) {
+    flex-wrap: nowrap; width: 100%; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .topbar > .group:not(.brand + .group)::-webkit-scrollbar { display: none; }
+  .topbar > .group button, .topbar > .group .mode-toggle { flex: none; }
+  .topbar .group button { padding: 6px 11px; }
+}

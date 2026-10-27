@@ -3,7 +3,7 @@
 
 /**
  * Steps run in order; pass only the steps that apply (filter beforehand).
- * @param {Array<{target?: string|(() => Element|null), title: string, body: string, before?: () => void}>} steps
+ * @param {Array<{target?: string|(() => Element|null), title: string, body: string, before?: () => void, centerIfMissing?: boolean}>} steps
  * @param {{ onDone?: (finished: boolean) => void }} opts
  */
 export function startTour(steps, { onDone } = {}) {
@@ -38,7 +38,7 @@ export function startTour(steps, { onDone } = {}) {
   const usable = (k) => {
     const s = steps[k];
     s.before?.();
-    return !s.target || !!find(s);
+    return !s.target || !!find(s) || !!s.centerIfMissing; // centerIfMissing: show as a centered card instead
   };
 
   function place() {

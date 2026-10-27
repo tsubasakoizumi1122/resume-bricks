@@ -406,3 +406,16 @@ export function applyTailorReply(text, bricks, base) {
 // ---------------------------------------------------------------- display
 
 export const termLabel = (c, surface) => TERM_LABELS[c] || surface?.get(c) || c;
+
+/** A readable resume name from a job post's first line: cut long ones at " - ", " | " or ", " rather than mid-phrase. */
+export function shortJobName(line, max = 44) {
+  const first = String(line || '').replace(/\s+/g, ' ').trim();
+  if (first.length <= max) return first;
+  let cut = -1;
+  for (const sep of [' - ', ' – ', ' — ', ' | ', ', ', ' at ', ' @ ']) {
+    const i = first.lastIndexOf(sep, max);
+    if (i > 12 && i > cut) cut = i;
+  }
+  if (cut > 0) return first.slice(0, cut).replace(/[\s,;:|–—-]+$/, '');
+  return `${first.slice(0, max).replace(/\s+\S*$/, '').replace(/[\s,;:|–—-]+$/, '')}…`;
+}

@@ -369,6 +369,9 @@ dialog.importer { width: min(760px, 94vw); }
   content: ''; display: block; height: 2px; width: 2.2em; margin-top: 0.2em; background: var(--accent);
 }
 
+/* A section title never ends a page on its own: it is kept with the section's first entry. */
+.resume .sec-lead { break-inside: avoid; }
+
 </style>
   <style>
 /* App look: "Frost" (soft glass), in light and night mode.
@@ -684,6 +687,22 @@ dialog::backdrop { background: rgba(12, 10, 30, 0.4); backdrop-filter: blur(4px)
   html, body, .workspace, .pane, .preview-pane, .paper-wrap { background: #fff !important; background-image: none !important; }
   .preview-pane { display: block !important; }
   #page { margin: 0 !important; }
+}
+
+/* phones: a compact top bar. Name and resume picker share a row; the buttons scroll sideways in one
+   row each instead of wrapping onto several lines, so the panes start higher up the screen.
+   (.brand + .group is the name row; the other groups hold buttons.) */
+@media screen and (max-width: 700px) {
+  .topbar { gap: 6px !important; padding: 8px 12px !important; }
+  .topbar > .brand + .group { flex-wrap: nowrap; width: 100%; }
+  .topbar > .brand + .group #resume-select { flex: 0 1 42%; min-width: 0; max-width: 42%; }
+  .topbar > .brand + .group #resume-name { flex: 1 1 0; min-width: 0; max-width: none; field-sizing: fixed; width: auto; }
+  .topbar > .group:not(.brand + .group) {
+    flex-wrap: nowrap; width: 100%; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .topbar > .group:not(.brand + .group)::-webkit-scrollbar { display: none; }
+  .topbar > .group button, .topbar > .group .mode-toggle { flex: none; }
+  .topbar .group button { padding: 6px 11px; }
 }
 
 </style>
@@ -1298,7 +1317,10 @@ function renderResume(comp, byId) {
       .map((it) => renderBlockHTML(byId.get(it.block), it))
       .filter(Boolean);
     if (!parts.length) continue;
-    html += `<section>${sec.title ? `<h2>${esc(sec.title)}</h2>` : ''}${parts.join('')}</section>`;
+    // The title and the first entry travel together, so a page break never strands a heading.
+    const [first, ...rest] = parts;
+    const lead = sec.title ? `<div class="sec-lead"><h2>${esc(sec.title)}</h2>${first}</div>` : first;
+    html += `<section>${lead}${rest.join('')}</section>`;
   }
   return html;
 }
@@ -1963,7 +1985,7 @@ function remapResume(comp, blockId, oldList, newList) {
 
 /**
  * Steps run in order; pass only the steps that apply (filter beforehand).
- * @param {Array<{target?: string|(() => Element|null), title: string, body: string, before?: () => void}>} steps
+ * @param {Array<{target?: string|(() => Element|null), title: string, body: string, before?: () => void, centerIfMissing?: boolean}>} steps
  * @param {{ onDone?: (finished: boolean) => void }} opts
  */
 function startTour(steps, { onDone } = {}) {
@@ -1998,7 +2020,7 @@ function startTour(steps, { onDone } = {}) {
   const usable = (k) => {
     const s = steps[k];
     s.before?.();
-    return !s.target || !!find(s);
+    return !s.target || !!find(s) || !!s.centerIfMissing; // centerIfMissing: show as a centered card instead
   };
 
   function place() {
@@ -3017,6 +3039,19 @@ function applyTailorReply(text, bricks, base) {
 
 const termLabel = (c, surface) => TERM_LABELS[c] || surface?.get(c) || c;
 
+/** A readable resume name from a job post's first line: cut long ones at " - ", " | " or ", " rather than mid-phrase. */
+function shortJobName(line, max = 44) {
+  const first = String(line || '').replace(/\s+/g, ' ').trim();
+  if (first.length <= max) return first;
+  let cut = -1;
+  for (const sep of [' - ', ' – ', ' — ', ' | ', ', ', ' at ', ' @ ']) {
+    const i = first.lastIndexOf(sep, max);
+    if (i > 12 && i > cut) cut = i;
+  }
+  if (cut > 0) return first.slice(0, cut).replace(/[\s,;:|–—-]+$/, '');
+  return `${first.slice(0, max).replace(/\s+\S*$/, '').replace(/[\s,;:|–—-]+$/, '')}…`;
+}
+
 
 
 
@@ -3163,7 +3198,13 @@ function nudgeTab(name) {
 }
 
 function bindPaneTabs() {
-  $$('[data-start]').forEach((button) => button.addEventListener('click', () => $(`#${button.dataset.start}`).click()));
+  $$('[data-start]').forEach((button) =>
+    button.addEventListener('click', () => {
+      // Step 1 starts from a clean library: the sample moves to the trash, then Import opens.
+      if (button.dataset.start === 'btn-import' && sampleBricks().length) return guard(startWithOwn);
+      $(`#${button.dataset.start}`).click();
+    }),
+  );
   let pane = 'library';
   try { pane = localStorage.getItem('resume-bricks:pane') || pane; } catch { /* ignore */ }
   showPane(pane, { scroll: false });
@@ -3217,17 +3258,18 @@ function tourSteps() {
       body: 'Click <b>Save</b> (⌘S) to keep this resume. When you’re ready to apply, click <b>PDF / Print</b> and choose “Save as PDF.”',
     },
     {
-      target: () => (hasSample ? $('#sample-banner') : $('#btn-import')),
+      target: () => (hasSample ? $('#quick-start') : $('#btn-import')),
       before: pane('library'),
       title: 'Start with your own experience',
       body: hasSample
-        ? 'When you’re ready, click <b>Start with my own</b>. The sample data moves to the trash, and you can import your current resume (PDF or Word). It’s split into bricks, and you review everything before it’s added.'
+        ? 'When you’re ready, click <b>1. Import your experience</b>. The sample moves to the trash, and you can import your current resume (PDF or Word). It’s split into bricks, and you review everything before it’s added.'
         : 'Click <b>Import</b> to turn an existing resume (PDF or Word) into bricks. You review everything before it’s added.',
     },
   ];
   if (host.backup) {
     steps.push({
-      target: '#storage-note',
+      target: () => $('#storage-note:not([hidden])'),
+      centerIfMissing: true,
       before: pane('library'),
       title: 'Your data stays in this browser',
       body: 'Nothing is uploaded. Since your data lives only in this browser, <b>download a backup</b> every so often, and always before clearing your browser data.',
@@ -4297,12 +4339,21 @@ function openImporter() {
   if (!$('#importer').open) $('#importer').showModal();
 }
 
+// Images (a photo or scan of a resume) can't be read as text: say so instead of making junk bricks.
+const IMAGE_FILE = /\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i;
+function rejectImage(file) {
+  if (file.type.startsWith('image/') || IMAGE_FILE.test(file.name)) {
+    throw new Error(`${file.name} is an image. Resume Bricks reads PDF, Word (.docx), PowerPoint (.pptx) or text files. For a photo or scan, paste its text instead.`);
+  }
+}
+
 async function readResumeFile(file) {
   if (!file) return;
   imp.fileName = file.name;
   openImporter();
   impStatus(`Reading ${file.name}…`);
   try {
+    rejectImage(file);
     let text;
     if (/\.(txt|md)$/i.test(file.name) || file.type.startsWith('text/')) {
       text = await file.text();
@@ -4323,6 +4374,7 @@ async function readResumeFile(file) {
       text = j.text;
     }
     showDrafts(text);
+    impStatus('');
   } catch (e) {
     impStatus(e.message, true);
     $('#imp-paste').open = true;
@@ -4564,6 +4616,7 @@ async function addWorkFiles(fileList) {
   for (const file of [...fileList]) {
     workStatus(`Reading ${file.name}…`);
     try {
+      rejectImage(file);
       let text;
       if (/\.(txt|md)$/i.test(file.name)) text = await file.text();
       else {
@@ -4675,7 +4728,9 @@ const LS_BACKUP = 'resume-bricks:last-backup';
 function renderStorageNote() {
   const el = $('#storage-note');
   if (!host.backup || !el) return;
-  el.hidden = false;
+  // Nothing of yours to back up yet: keep the first screen short.
+  el.hidden = !state.blocks.some((b) => !b.sample && b.type !== '_error');
+  if (el.hidden) return;
   let last = null;
   try { last = Number(localStorage.getItem(LS_BACKUP)) || null; } catch { /* ignore */ }
   const own = state.blocks.some((b) => !b.sample && b.type !== '_error');
@@ -4744,10 +4799,12 @@ function renderSampleBanner() {
   const el = $('#sample-banner');
   if (!el) return;
   const n = sampleBricks().length;
-  $('#quick-start').hidden = !n;
   const own = state.blocks.filter((b) => !b.sample && b.type !== '_error').length;
-  el.hidden = !n;
-  if (!n) return;
+  // Newcomers (only the sample person) see the quick start, whose first step does what this banner did.
+  // Once you have bricks of your own, a small banner offers to clear any leftover sample.
+  $('#quick-start').hidden = !(n && !own);
+  el.hidden = !(n && own);
+  if (!n || !own) return;
   $('#sample-banner-text').innerHTML = own
     ? `<b>${n} sample brick${n === 1 ? '' : 's'}</b> from the fictional example are still here. Tailoring already skips them.`
     : '<b>This is a fictional sample person.</b> Bring in your own career to start.';
@@ -4805,9 +4862,7 @@ function setTailorStage() {
 
 function tailorDefaultName(job) {
   const first = String(job || '').split('\n').map((l) => l.trim()).find((l) => l.length > 2) || '';
-  // "Development Analyst - Pacific Urban Partners" stays readable; very long first lines are cut at a word.
-  const short = first.length > 44 ? `${first.slice(0, 44).replace(/\s+\S*$/, '')}…` : first;
-  return short || 'Tailored resume';
+  return shortJobName(first) || 'Tailored resume';
 }
 
 function openTailor() {

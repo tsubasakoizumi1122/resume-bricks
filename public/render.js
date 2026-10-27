@@ -114,7 +114,10 @@ export function renderResume(comp, byId) {
       .map((it) => renderBlockHTML(byId.get(it.block), it))
       .filter(Boolean);
     if (!parts.length) continue;
-    html += `<section>${sec.title ? `<h2>${esc(sec.title)}</h2>` : ''}${parts.join('')}</section>`;
+    // The title and the first entry travel together, so a page break never strands a heading.
+    const [first, ...rest] = parts;
+    const lead = sec.title ? `<div class="sec-lead"><h2>${esc(sec.title)}</h2>${first}</div>` : first;
+    html += `<section>${lead}${rest.join('')}</section>`;
   }
   return html;
 }

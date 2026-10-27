@@ -59,3 +59,6 @@
 .resume.theme-modern h2::after {
   content: ''; display: block; height: 2px; width: 2.2em; margin-top: 0.2em; background: var(--accent);
 }
+
+/* A section title never ends a page on its own: it is kept with the section's first entry. */
+.resume .sec-lead { break-inside: avoid; }

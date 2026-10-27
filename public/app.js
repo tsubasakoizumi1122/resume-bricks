@@ -4,7 +4,7 @@ import { parseResume } from './importer.js';
 import { buildWorkPrompt, parseClaudeReply } from './work.js';
 import { remapResume } from './hide.js';
 import { startTour } from './tour.js';
-import { tailorResume, trimOnce, hiddenByScore, buildTailorPrompt, applyTailorReply, termLabel, ownBricks } from './tailor.js';
+import { tailorResume, trimOnce, hiddenByScore, shortJobName, buildTailorPrompt, applyTailorReply, termLabel, ownBricks } from './tailor.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -144,7 +144,13 @@ function nudgeTab(name) {
 }
 
 function bindPaneTabs() {
-  $$('[data-start]').forEach((button) => button.addEventListener('click', () => $(`#${button.dataset.start}`).click()));
+  $$('[data-start]').forEach((button) =>
+    button.addEventListener('click', () => {
+      // Step 1 starts from a clean library: the sample moves to the trash, then Import opens.
+      if (button.dataset.start === 'btn-import' && sampleBricks().length) return guard(startWithOwn);
+      $(`#${button.dataset.start}`).click();
+    }),
+  );
   let pane = 'library';
   try { pane = localStorage.getItem('resume-bricks:pane') || pane; } catch { /* ignore */ }
   showPane(pane, { scroll: false });
@@ -198,17 +204,18 @@ function tourSteps() {
       body: 'Click <b>Save</b> (⌘S) to keep this resume. When you’re ready to apply, click <b>PDF / Print</b> and choose “Save as PDF.”',
     },
     {
-      target: () => (hasSample ? $('#sample-banner') : $('#btn-import')),
+      target: () => (hasSample ? $('#quick-start') : $('#btn-import')),
       before: pane('library'),
       title: 'Start with your own experience',
       body: hasSample
-        ? 'When you’re ready, click <b>Start with my own</b>. The sample data moves to the trash, and you can import your current resume (PDF or Word). It’s split into bricks, and you review everything before it’s added.'
+        ? 'When you’re ready, click <b>1. Import your experience</b>. The sample moves to the trash, and you can import your current resume (PDF or Word). It’s split into bricks, and you review everything before it’s added.'
         : 'Click <b>Import</b> to turn an existing resume (PDF or Word) into bricks. You review everything before it’s added.',
     },
   ];
   if (host.backup) {
     steps.push({
-      target: '#storage-note',
+      target: () => $('#storage-note:not([hidden])'),
+      centerIfMissing: true,
       before: pane('library'),
       title: 'Your data stays in this browser',
       body: 'Nothing is uploaded. Since your data lives only in this browser, <b>download a backup</b> every so often, and always before clearing your browser data.',
@@ -1278,12 +1285,21 @@ function openImporter() {
   if (!$('#importer').open) $('#importer').showModal();
 }
 
+// Images (a photo or scan of a resume) can't be read as text: say so instead of making junk bricks.
+const IMAGE_FILE = /\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i;
+function rejectImage(file) {
+  if (file.type.startsWith('image/') || IMAGE_FILE.test(file.name)) {
+    throw new Error(`${file.name} is an image. Resume Bricks reads PDF, Word (.docx), PowerPoint (.pptx) or text files. For a photo or scan, paste its text instead.`);
+  }
+}
+
 async function readResumeFile(file) {
   if (!file) return;
   imp.fileName = file.name;
   openImporter();
   impStatus(`Reading ${file.name}…`);
   try {
+    rejectImage(file);
     let text;
     if (/\.(txt|md)$/i.test(file.name) || file.type.startsWith('text/')) {
       text = await file.text();
@@ -1304,6 +1320,7 @@ async function readResumeFile(file) {
       text = j.text;
     }
     showDrafts(text);
+    impStatus('');
   } catch (e) {
     impStatus(e.message, true);
     $('#imp-paste').open = true;
@@ -1545,6 +1562,7 @@ async function addWorkFiles(fileList) {
   for (const file of [...fileList]) {
     workStatus(`Reading ${file.name}…`);
     try {
+      rejectImage(file);
       let text;
       if (/\.(txt|md)$/i.test(file.name)) text = await file.text();
       else {
@@ -1656,7 +1674,9 @@ const LS_BACKUP = 'resume-bricks:last-backup';
 function renderStorageNote() {
   const el = $('#storage-note');
   if (!host.backup || !el) return;
-  el.hidden = false;
+  // Nothing of yours to back up yet: keep the first screen short.
+  el.hidden = !state.blocks.some((b) => !b.sample && b.type !== '_error');
+  if (el.hidden) return;
   let last = null;
   try { last = Number(localStorage.getItem(LS_BACKUP)) || null; } catch { /* ignore */ }
   const own = state.blocks.some((b) => !b.sample && b.type !== '_error');
@@ -1725,10 +1745,12 @@ function renderSampleBanner() {
   const el = $('#sample-banner');
   if (!el) return;
   const n = sampleBricks().length;
-  $('#quick-start').hidden = !n;
   const own = state.blocks.filter((b) => !b.sample && b.type !== '_error').length;
-  el.hidden = !n;
-  if (!n) return;
+  // Newcomers (only the sample person) see the quick start, whose first step does what this banner did.
+  // Once you have bricks of your own, a small banner offers to clear any leftover sample.
+  $('#quick-start').hidden = !(n && !own);
+  el.hidden = !(n && own);
+  if (!n || !own) return;
   $('#sample-banner-text').innerHTML = own
     ? `<b>${n} sample brick${n === 1 ? '' : 's'}</b> from the fictional example are still here. Tailoring already skips them.`
     : '<b>This is a fictional sample person.</b> Bring in your own career to start.';
@@ -1786,9 +1808,7 @@ function setTailorStage() {
 
 function tailorDefaultName(job) {
   const first = String(job || '').split('\n').map((l) => l.trim()).find((l) => l.length > 2) || '';
-  // "Development Analyst - Pacific Urban Partners" stays readable; very long first lines are cut at a word.
-  const short = first.length > 44 ? `${first.slice(0, 44).replace(/\s+\S*$/, '')}…` : first;
-  return short || 'Tailored resume';
+  return shortJobName(first) || 'Tailored resume';
 }
 
 function openTailor() {

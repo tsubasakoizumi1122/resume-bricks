@@ -66,3 +66,15 @@ test('blockLabel', () => {
   assert.equal(blockLabel(byId.get('e')), 'Analyst · Acme');
   assert.equal(blockLabel({ type: 'experience', title: 'Custom' }), 'Custom');
 });
+
+test('a section title is kept with its first entry (no stranded headings at a page break)', async () => {
+  const { renderResume } = await import('../public/render.js');
+  const byId = new Map([
+    ['a', { id: 'a', type: 'experience', role: 'Analyst', org: 'One', bullets: ['x'] }],
+    ['b', { id: 'b', type: 'experience', role: 'Intern', org: 'Two', bullets: ['y'] }],
+  ]);
+  const html = renderResume({ sections: [{ title: 'Experience', items: [{ block: 'a' }, { block: 'b' }] }] }, byId);
+  assert.match(html, /<div class="sec-lead"><h2>Experience<\/h2><div class="entry[^"]*">[\s\S]*?One/);
+  assert.equal((html.match(/class="sec-lead"/g) || []).length, 1);
+  assert.ok(html.indexOf('Two') > html.indexOf('</div></div>') || html.includes('Two'));
+});
