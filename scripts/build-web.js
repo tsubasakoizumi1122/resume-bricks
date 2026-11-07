@@ -12,6 +12,27 @@ import { build } from 'esbuild';
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.resolve(process.env.RB_WEB_OUT || path.join(ROOT, 'docs', 'app'));
 
+// Link previews (X, LinkedIn, Slack, iMessage…). The image is docs/og.png, served next to docs/index.html.
+const SITE = 'https://tsubasakoizumi1122.github.io/resume-bricks/';
+const SHARE = {
+  title: 'Resume Bricks: a tailored resume for every job',
+  description: 'Stock your career history as reusable bricks and snap them into a tailored resume for every application. Free, no sign-up; runs in your browser and nothing is uploaded.',
+  image: SITE + 'og.png',
+};
+const shareTags = (sub) => [
+  `<link rel="canonical" href="${SITE + sub}" />`,
+  `<meta property="og:type" content="website" />`,
+  `<meta property="og:site_name" content="Resume Bricks" />`,
+  `<meta property="og:url" content="${SITE + sub}" />`,
+  `<meta property="og:title" content="${SHARE.title}" />`,
+  `<meta property="og:description" content="${SHARE.description}" />`,
+  `<meta property="og:image" content="${SHARE.image}" />`,
+  `<meta property="og:image:width" content="1200" />`,
+  `<meta property="og:image:height" content="630" />`,
+  `<meta property="og:image:alt" content="Resume Bricks: the library of bricks, the resume layout and a live preview" />`,
+  `<meta name="twitter:card" content="summary_large_image" />`,
+].map((t) => `  ${t}\n`).join('');
+
 async function readKind(kind) {
   const dir = path.join(ROOT, 'sample-data', kind);
   const out = {};
@@ -96,7 +117,7 @@ for (const f of ['styles.css', 'resume.css', 'theme.css']) await fs.copyFile(pat
 
 let html = (await fs.readFile(path.join(ROOT, 'public', 'index.html'), 'utf8')).replace(
   '</head>',
-  `  <meta name="description" content="Stock your career history as reusable bricks and snap them into a tailored resume for every application. Runs in your browser; nothing is uploaded." />\n  <meta name="rb-build" content="${BUILD}" />\n</head>`,
+  `  <meta name="description" content="${SHARE.description}" />\n${shareTags('app/')}  <meta name="rb-build" content="${BUILD}" />\n</head>`,
 );
 for (const f of ['styles.css', 'resume.css', 'theme.css']) {
   if (!html.includes(`href="${f}"`)) throw new Error(`index.html no longer links ${f}`);

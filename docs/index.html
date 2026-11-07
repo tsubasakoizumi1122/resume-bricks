@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resume Bricks: a tailored resume for every job</title>
+  <meta name="description" content="Stock your career history as reusable bricks and snap them into a tailored resume for every application. Free, no sign-up; runs in your browser and nothing is uploaded." />
+  <link rel="canonical" href="https://tsubasakoizumi1122.github.io/resume-bricks/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Resume Bricks" />
+  <meta property="og:url" content="https://tsubasakoizumi1122.github.io/resume-bricks/" />
+  <meta property="og:title" content="Resume Bricks: a tailored resume for every job" />
+  <meta property="og:description" content="Stock your career history as reusable bricks and snap them into a tailored resume for every application. Free, no sign-up; runs in your browser and nothing is uploaded." />
+  <meta property="og:image" content="https://tsubasakoizumi1122.github.io/resume-bricks/og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Resume Bricks: the library of bricks, the resume layout and a live preview" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='10' width='28' height='18' rx='3' fill='%236c5ce7'/><rect x='6' y='5' width='8' height='6' rx='2' fill='%236c5ce7'/><rect x='18' y='5' width='8' height='6' rx='2' fill='%236c5ce7'/></svg>" />
+  <style>
+    :root {
+      --bg: #f6f5fb; --panel: #fff; --text: #1c1b2e; --muted: #5d5c75; --line: #e4e1f2;
+      --primary: #6c5ce7; --primary-soft: #ece9ff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      color: var(--text); background: var(--bg); line-height: 1.6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0c0b17; --panel: #16152a; --text: #ecebf7; --muted: #a9a7c4; --line: #2a2846; --primary: #9d8cff; --primary-soft: #23204a; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    a { color: var(--primary); }
+    img { max-width: 100%; height: auto; display: block; }
+    .wrap { width: min(1100px, 100% - 40px); margin: 0 auto; }
+
+    header.top { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; text-decoration: none; color: var(--text); }
+    .logo { width: 24px; height: 17px; background: var(--primary); border-radius: 4px; position: relative; margin-top: 5px; }
+    .logo::before, .logo::after { content: ''; position: absolute; top: -6px; width: 7px; height: 7px; background: var(--primary); border-radius: 2px; }
+    .logo::before { left: 3px; } .logo::after { right: 3px; }
+    nav.top-links { display: flex; gap: 18px; font-size: 15px; }
+    nav.top-links a { color: var(--muted); text-decoration: none; }
+    nav.top-links a:hover { color: var(--text); }
+
+    .hero { text-align: center; padding: clamp(40px, 8vw, 90px) 0 40px; }
+    .hero h1 { font-size: clamp(36px, 6vw, 60px); line-height: 1.08; letter-spacing: -0.02em; margin: 0 auto 18px; max-width: 14em; }
+    .hero p.lead { font-size: clamp(17px, 2.2vw, 20px); color: var(--muted); max-width: 36em; margin: 0 auto 28px; }
+    .cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+    .btn { display: inline-block; padding: 13px 26px; border-radius: 999px; font-weight: 700; text-decoration: none; font-size: 16px; }
+    .btn.primary { background: var(--primary); color: #fff; box-shadow: 0 8px 24px color-mix(in srgb, var(--primary) 35%, transparent); }
+    .btn.ghost { border: 1px solid var(--line); color: var(--text); background: var(--panel); }
+    .btn:hover { transform: translateY(-1px); }
+    .badges { margin-top: 18px; color: var(--muted); font-size: 14px; }
+
+    .shot { margin: 30px auto 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 24px 70px rgba(40, 30, 120, 0.18); }
+    .shot .dark { display: none; }
+    @media (prefers-color-scheme: dark) { .shot .light { display: none; } .shot .dark { display: block; } }
+
+    section { padding: clamp(50px, 8vw, 90px) 0 0; }
+    h2 { font-size: clamp(26px, 3.6vw, 36px); letter-spacing: -0.01em; margin: 0 0 8px; text-align: center; }
+    .sub { color: var(--muted); text-align: center; margin: 0 auto 32px; max-width: 40em; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
+    .card h3 { margin: 0 0 6px; font-size: 18px; }
+    .card p { margin: 0; color: var(--muted); font-size: 15px; }
+    .n { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); font-weight: 800; margin-bottom: 10px; }
+
+    .samples { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .samples figure { margin: 0; }
+    .samples img { border-radius: 10px; border: 1px solid var(--line); background: #fff; }
+    .samples figcaption { color: var(--muted); font-size: 14px; margin-top: 8px; }
+    @media (max-width: 640px) { .samples { grid-template-columns: 1fr; } nav.top-links .hide-sm { display: none; } }
+
+    .final { text-align: center; padding-bottom: 20px; }
+    pre { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 14px; text-align: left; max-width: 34em; margin: 14px auto; }
+    .ja { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 24px; max-width: 46em; margin: 0 auto; }
+    .ja h2 { text-align: left; font-size: 22px; }
+    footer { margin-top: 70px; padding: 26px 0 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+    footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 20px; justify-content: space-between; }
+    footer a { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="./"><span class="logo"></span>Resume Bricks</a>
+      <nav class="top-links">
+        <a href="#how" class="hide-sm">How it works</a>
+        <a href="#ja" class="hide-sm" lang="ja">日本語</a>
+        <a href="https://github.com/tsubasakoizumi1122/resume-bricks">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="hero">
+      <h1>A tailored resume for every job, in seconds.</h1>
+      <p class="lead">Write each job, project and skill once as a reusable “brick”. Paste a job post, and Resume Bricks assembles a one-page draft from your own experience. Pick the bullets, then save as PDF.</p>
+      <div class="cta">
+        <a class="btn primary" href="app/">Open the app, it's free</a>
+        <a class="btn ghost" href="https://github.com/tsubasakoizumi1122/resume-bricks">View on GitHub</a>
+      </div>
+      <p class="badges">No sign-up · No API key · Your data never leaves your browser</p>
+      <div class="shot">
+        <img class="light" src="screenshot.png" alt="Resume Bricks: a library of bricks, the resume layout and a live, print-accurate preview" width="1440" height="853" />
+        <img class="dark" src="screenshot-dark.png" alt="Resume Bricks in night mode" width="1440" height="853" loading="lazy" />
+      </div>
+    </div>
+
+    <section>
+      <h2>Stop rewriting the same resume</h2>
+      <p class="sub">Most people keep one resume and rewrite it for every application, losing good bullets along the way. Resume Bricks keeps your career as a library instead.</p>
+      <div class="grid">
+        <div class="card"><h3>Write once, reuse everywhere</h3><p>One brick per job, project, degree or skill group. Keep every version of a bullet and pick per application.</p></div>
+        <div class="card"><h3>Tailor to a job post</h3><p>Paste the posting. The best-matching summary, experience and bullets are picked for you, trimmed to one page if you like.</p></div>
+        <div class="card"><h3>No invented claims</h3><p>Tailoring only chooses from what you wrote, and a match report shows the requirements none of your bricks cover.</p></div>
+        <div class="card"><h3>Private by design</h3><p>Everything runs in your browser, including reading PDF and Word files. Nothing is uploaded. Download a backup any time.</p></div>
+      </div>
+    </section>
+
+    <section id="how">
+      <h2>How it works</h2>
+      <p class="sub">Three steps. The first one takes a few minutes; after that, each new application takes seconds.</p>
+      <div class="grid">
+        <div class="card"><span class="n">1</span><h3>Import your resume</h3><p>Drop in a PDF or Word file. It's split into bricks you can review. Or turn reports, slides and GitHub projects into bricks with Claude, no API key needed.</p></div>
+        <div class="card"><span class="n">2</span><h3>Tailor to a job</h3><p>Paste a job post and get a draft built from your bricks. Drag to reorder, and choose which bullets show in this resume only.</p></div>
+        <div class="card"><span class="n">3</span><h3>Save as PDF</h3><p>Classic or Modern look, Letter or A4, live page-break guides. Export a clean PDF or Markdown.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Same career, two resumes</h2>
+      <p class="sub">Both were built from the same bricks of a fictional marketer: different order, different summary, different bullets.</p>
+      <div class="samples">
+        <figure><a href="samples/growth-marketing.pdf"><img src="samples/growth-marketing.png" alt="Growth marketing resume" loading="lazy" /></a><figcaption><strong>Growth marketing</strong>: leads with paid budget, A/B tests and lifecycle email.</figcaption></figure>
+        <figure><a href="samples/brand-content-marketing.pdf"><img src="samples/brand-content-marketing.png" alt="Brand and content marketing resume" loading="lazy" /></a><figcaption><strong>Brand &amp; content</strong>: leads with content and events, hides the paid-media bullets.</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="final">
+      <h2>Try it with the sample data</h2>
+      <p class="sub">The app opens with a fictional sample person, so you can see how it works before adding your own career.</p>
+      <div class="cta"><a class="btn primary" href="app/">Open Resume Bricks</a></div>
+      <p class="sub" style="margin-top:28px">Prefer plain files on your own computer? Run the local app (Node.js 18.17+) and keep everything as YAML you can version with Git:</p>
+      <pre><code>git clone https://github.com/tsubasakoizumi1122/resume-bricks.git
+cd resume-bricks
+npm install
+npm start</code></pre>
+    </section>
+
+    <section id="ja" lang="ja">
+      <div class="ja">
+        <h2>日本語</h2>
+        <p>経歴を「ブロック」としてストックして、応募先ごとに組み立てるレジュメ作成ツールです。職歴・プロジェクト・学歴・スキルを一度ずつ書いておけば、求人票を貼るだけで、自分の経験だけから1ページの下書きを作れます。見せる箇条書きを選んで、PDF で保存できます。</p>
+        <p>無料・登録不要。すべてブラウザの中で動き、データはどこにも送信されません。</p>
+        <p><a class="btn primary" href="app/">ブラウザで使う</a></p>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <span>Resume Bricks · <a href="https://github.com/tsubasakoizumi1122/resume-bricks/blob/main/LICENSE">PolyForm Noncommercial license</a></span>
+      <span><a href="https://github.com/tsubasakoizumi1122/resume-bricks/issues/new">Send feedback</a> · <a href="https://github.com/tsubasakoizumi1122/resume-bricks">GitHub</a></span>
+    </div>
+  </footer>
+</body>
+</html>

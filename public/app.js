@@ -221,7 +221,7 @@ function tourSteps() {
       body: 'Nothing is uploaded. Since your data lives only in this browser, <b>download a backup</b> every so often, and always before clearing your browser data.',
     });
   }
-  steps.push({ title: 'You’re all set', body: 'You can replay this tour anytime with the <b>?</b> button at the top.' });
+  steps.push({ title: 'You’re all set', body: 'You can replay this tour anytime with the <b>?</b> button at the top. Ideas or bugs? <a href="https://github.com/tsubasakoizumi1122/resume-bricks/issues/new" target="_blank" rel="noopener">Send feedback</a>.' });
   return steps;
 }
 
