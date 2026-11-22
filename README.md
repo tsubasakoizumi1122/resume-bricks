@@ -47,6 +47,7 @@ Click an image for the PDF. Both open in the app on first run, so you can see ex
 Open **<https://tsubasakoizumi1122.github.io/resume-bricks/app/>**. It's the same app, with nothing to install:
 
 - Your bricks and resumes are saved **in that browser** (IndexedDB). PDF, Word and PowerPoint files are read in the browser too. Nothing is uploaded.
+- To learn whether the app helps, the web version counts **anonymous** visits and a few steps (opened Import, built a tailored resume, printed) with [GoatCounter](https://www.goatcounter.com/): no cookies, and never your resume content, names or files. Browsers set to Do Not Track or Global Privacy Control are not counted. The local app counts nothing. Code: [`web/telemetry.js`](web/telemetry.js).
 - Because the data lives in one browser, use **Download backup** at the top of the library now and then. The backup is a `.zip` laid out like `my-data/`, so **Restore** brings it back, and you can also unzip it into `my-data/` to switch to the local app.
 - Clearing your browser's site data erases it, and it does not sync between browsers or devices. The local app below keeps everything as plain YAML files instead.
 

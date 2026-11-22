@@ -17,4 +17,10 @@ function staleBuild() {
   return true;
 }
 
-if (!staleBuild()) import('../public/app.js');
+if (!staleBuild()) {
+  import('../public/app.js');
+  // Feedback link and anonymous step counts (both off until set in web/config.js). Never blocks the app.
+  Promise.all([import('./telemetry.js'), import('./config.js')])
+    .then(([t, c]) => t.start({ feedbackUrl: c.FEEDBACK_URL, goatcounter: c.GOATCOUNTER }))
+    .catch(() => {});
+}
