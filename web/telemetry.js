@@ -42,13 +42,18 @@ export function campaignQuery(search = '') {
 export const isFeedbackLink = (href = '') => /github\.com\/[^/]+\/resume-bricks\/issues\/new/.test(href || '');
 
 const CSS = `
-.rb-ask { position: fixed; right: 18px; bottom: 18px; z-index: 20; max-width: 320px;
+.rb-feedback-fab { position: fixed; right: 18px; bottom: 18px; z-index: 15; text-decoration: none;
+  background: var(--primary); color: var(--primary-ink); border-radius: 999px; padding: 8px 16px;
+  font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+.rb-feedback-fab:hover { filter: brightness(1.08); }
+.rb-feedback-fab:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.rb-ask { position: fixed; right: 18px; bottom: 66px; z-index: 20; max-width: 320px;
   background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius);
   box-shadow: 0 6px 24px rgba(0,0,0,.15); padding: 14px 16px; }
 .rb-ask p { margin: 0 0 10px; line-height: 1.45; }
 .rb-ask .rb-ask-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .rb-ask a { text-decoration: none; border-radius: 8px; padding: 6px 12px; background: var(--primary); color: var(--primary-ink); }
-@media print { .rb-ask { display: none !important; } }
+@media print { .rb-ask, .rb-feedback-fab { display: none !important; } }
 `;
 
 export function start({ feedbackUrl, goatcounter, win = window, doc = document }) {
@@ -85,8 +90,19 @@ export function start({ feedbackUrl, goatcounter, win = window, doc = document }
 
   // The app's "Send feedback" links (library, end of the tour) point at GitHub Issues, which most
   // students cannot use without an account. In the web version they open the feedback form instead.
-  // Not a top-bar button: one more button wraps the bar onto a second row at 1440px.
+  // Not a top-bar button: one more button wraps the bar onto a second row at 1440px. So a small
+  // button floats in the corner instead, always visible (the library link sits below every brick).
   if (feedbackUrl) {
+    const fab = doc.createElement('a');
+    fab.className = 'rb-feedback-fab';
+    fab.href = feedbackUrl;
+    fab.target = '_blank';
+    fab.rel = 'noopener';
+    fab.textContent = 'Feedback';
+    fab.title = 'Tell me what works and what doesn’t (1 minute)';
+    fab.addEventListener('click', () => hit('feedback'));
+    doc.body.append(fab);
+
     doc.addEventListener('click', (e) => {
       const a = e.target.closest?.('a[href]');
       if (!a || !isFeedbackLink(a.getAttribute('href'))) return;
